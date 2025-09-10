@@ -10,25 +10,113 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
+// model User {
+//   id       Int      @id @default(autoincrement())
+//   email    String   @unique
+//   name     String?
+//   slug     String   @unique
+//   posts    Post[]
+//   createdAt DateTime @default(now()) @map("created_at")
+// }
+
+// model Post {
+//   id       Int      @id @default(autoincrement())
+//   title    String
+//   author   User     @relation(fields: [authorID], references: [id])
+//   authorID Int
+//   updatedAt DateTime @updatedAt @map("update_at")
+//   createdAt DateTime @default(now()) @map("create_at")
+// }
+
 model User {
-  id Int @id @default(autoincrement())
-  email String @unique
-  name String?
-  slug String @unique
-  posts Post[]
-  createAt DateTime @default(now()) @map("create_at")
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(STUDENT) // STUDENT | TEACHER | ADMIN
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Quan hệ
+  quizAttempts QuizAttempt[]
+  chatMessages ChatMessage[]
+  Quiz         Quiz[]
 }
 
-model Post {
-    id Int @id @default(autoincrement())
-    title String
-    author User @relation(fields: [authorID], references: [id])
-    authorID Int
-    updateAt DateTime @updatedAt @map("update_at")
-    createAt DateTime @default(now()) @map("create_at")
-} 
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model Quiz {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  createdBy   Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+  isAI        Boolean  @default(false) // true nếu quiz được AI sinh ra
+
+  // Quan hệ
+  questions Question[]
+  attempts  QuizAttempt[]
+
+  // Quan hệ ngược
+  user User @relation(fields: [createdBy], references: [id])
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  quizId    Int
+  content   String // nội dung câu hỏi
+  options   Json // danh sách đáp án [{A: "xxx", B: "yyy"}]
+  answer    String // đáp án đúng (A/B/C/D)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  quiz          Quiz            @relation(fields: [quizId], references: [id])
+  StudentAnswer StudentAnswer[]
+}
+
+model QuizAttempt {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  quizId     Int
+  score      Float
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  user    User            @relation(fields: [userId], references: [id])
+  quiz    Quiz            @relation(fields: [quizId], references: [id])
+  answers StudentAnswer[]
+}
+
+model StudentAnswer {
+  id         Int     @id @default(autoincrement())
+  attemptId  Int
+  questionId Int
+  selected   String // đáp án chọn
+  isCorrect  Boolean
+
+  attempt  QuizAttempt @relation(fields: [attemptId], references: [id])
+  question Question    @relation(fields: [questionId], references: [id])
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  sender    Sender // USER | AI
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id])
+}
+
+enum Sender {
+  USER
+  AI
+}

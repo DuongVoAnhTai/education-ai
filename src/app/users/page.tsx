@@ -11,7 +11,7 @@ async function UsersPage() {
       <ul>
         {users.map((user) => (
           <li key={user.id}>
-            <Link href={`/users/${user.slug}`}>{user.name}</Link>
+            <Link href={`/users/${user.name}`}>{user.name}</Link>
           </li>
         ))}
       </ul>

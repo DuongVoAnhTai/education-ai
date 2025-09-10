@@ -18,4 +18,5 @@ USER MANUAL
     - We use PostGreSQL for this project, we will use it on 'supabase' website which support for PostGre
     - To push data in file /prisma/schema.prisma to supabase, we will use "npx prisma migrate dev --name init" 
         or "npx prisma db push" (search prisma document for details)
+    - To seed db, we will use 'npx prisma db seed'
     

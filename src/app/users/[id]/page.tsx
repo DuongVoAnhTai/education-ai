@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 
-async function UserPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+async function UserPage({ params }: { params: Promise<{ id: number }> }) {
+  const { id } = await params;
   const user = await prisma.user.findUnique({
     where: {
-      slug: slug,
+      id: id,
     },
   });
   return (
