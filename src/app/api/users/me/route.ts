@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: { id: payload.userId },
     select: { id: true, email: true, role: true, fullName: true },
   });
@@ -67,7 +67,7 @@ export async function PUT(req: Request) {
     }
 
     // Update user
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await prisma.users.update({
       where: { id: payload.userId },
       data: updateData,
       select: {

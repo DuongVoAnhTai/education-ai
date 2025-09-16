@@ -32,14 +32,14 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Chỉ cho phép TEACHER và ADMIN truy cập
-    if (!["TEACHER", "ADMIN"].includes(payload.role)) {
+    // Chỉ cho phép ADMIN truy cập
+    if (!["ADMIN"].includes(payload.role)) {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
     const userId = id;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: {
         id: userId,
         isDeleted: false, // Không lấy user đã bị xóa

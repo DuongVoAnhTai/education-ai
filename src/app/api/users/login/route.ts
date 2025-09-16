@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json(
         { error: "Sai email hoặc mật khẩu" },
