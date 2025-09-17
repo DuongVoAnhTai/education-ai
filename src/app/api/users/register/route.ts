@@ -2,15 +2,6 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
-// GET all users
-// export async function GET() {
-//   const users = await prisma.user.findMany({
-//     where: { isDeleted: false },
-//     orderBy: { createdAt: "desc" },
-//   });
-//   return NextResponse.json(users);
-// }
-
 // POST create user
 export async function POST(req: Request) {
   try {
