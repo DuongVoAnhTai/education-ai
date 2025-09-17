@@ -73,7 +73,7 @@ model Users {
   role         String?
   avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @map("updated_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   isDeleted    Boolean  @default(false) @map("is_deleted")
 
   // Relations
@@ -91,7 +91,7 @@ model Skills {
   description String?
   visibility  Visibility @default(PRIVATE)
   createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @default(now()) @map("updated_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
   isDeleted   Boolean    @default(false) @map("is_deleted")
 
   // Relations
@@ -128,7 +128,7 @@ model LearningResources {
   content      String?
   ordering     Int?
   createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @default(now()) @map("updated_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
 
   skill Skills? @relation(fields: [skillId], references: [id])
 }
@@ -142,7 +142,7 @@ model Exercises {
   timeLimitSeconds Int?     @map("time_limit_seconds")
   passScore        Float?   @map("pass_score")
   createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @default(now()) @map("updated_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   skill     Skills?     @relation(fields: [skillId], references: [id])
   questions Questions[]
@@ -156,7 +156,7 @@ model Questions {
   points       Float        @default(1)
   ordering     Int?
   createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @default(now()) @map("updated_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
 
   exercise    Exercises?           @relation(fields: [exerciseId], references: [id])
   options     QuestionOptions[]
@@ -205,7 +205,7 @@ model Conversations {
   isGroup   Boolean  @default(false) @map("is_group")
   allowAi   Boolean  @default(false) @map("allow_ai")
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   creator      Users?                     @relation(fields: [createdBy], references: [id])
   participants ConversationParticipants[]

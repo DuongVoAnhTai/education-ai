@@ -36,9 +36,6 @@ export async function GET(
         role: true,
         avatarUrl: true,
         createdAt: true,
-        // Có thể thêm các relations khác như:
-        // quizAttempts: true,
-        // chatMessages: true
       },
     });
 
@@ -51,6 +48,92 @@ export async function GET(
     console.error("Error fetching student:", error);
     return NextResponse.json(
       { error: "Failed to fetch student information" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const payload = verifyToken(req);
+    if (!payload || payload.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = params;
+    const { email, username, fullName, role, isDeleted } = await req.json();
+
+    // Check if user exists
+    const existingUser = await prisma.users.findUnique({
+      where: { id }
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Update user
+    const updatedUser = await prisma.users.update({
+      where: { id },
+      data: {
+        email,
+        username,
+        fullName,
+        role,
+        isDeleted,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        fullName: true,
+        role: true,
+        avatarUrl: true,
+        createdAt: true
+      }
+    });
+
+    return NextResponse.json({ user: updatedUser });
+
+  } catch (error) {
+    console.error("Update user error:", error);
+    return NextResponse.json(
+      { error: "Failed to update user" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const payload = verifyToken(req);
+    if (!payload || payload.role !== 'ADMIN') {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = params;
+
+    // Soft delete user
+    await prisma.users.update({
+      where: { id },
+      data: { isDeleted: true }
+    });
+
+    return NextResponse.json(
+      { message: "User deleted successfully" },
+      { status: 200 }
+    );
+
+  } catch (error) {
+    console.error("Delete user error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete user" },
       { status: 500 }
     );
   }
