@@ -1,6 +1,6 @@
 import * as httpRequest from "@/utils/httpRequest";
 
-export const getCurrentUser = async (): Promise<User | undefined> => {
+export const getUser = async (): Promise<User | undefined> => {
   try {
     const res = await httpRequest.get("users/me");
 

@@ -8,12 +8,12 @@ const httpRequest = axios.create({
 });
 
 httpRequest.interceptors.request.use((config) => {
-  // const token =
-    // typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  // if (token) {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  if (token) {
     config.headers = config.headers || {};
-    config.headers.Authorization = `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMmEzOTU1ZC0xMjcxLTQ2ZTItYTM2Ny1mYjZjN2RhMGIyZWUiLCJyb2xlIjoiU1RVREVOVCIsImlhdCI6MTc1ODA4MzQyMSwiZXhwIjoxNzU4MDg3MDIxfQ.M7IzkQCqurXghGh7bezMWXApwqRKcdLfIvptmNBWw2M`;
-  // }
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

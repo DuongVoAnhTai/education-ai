@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import * as userService from "@/services/userServices";
+import * as cloudinaryService from "@/services/cloudinaryServices";
 
 function LoadImageComponent() {
   const [result, setResult] = useState<User | null>(null);
@@ -16,7 +17,7 @@ function LoadImageComponent() {
   useEffect(() => {
     const fetchApi = async () => {
       try {
-        const userData = await userService.getCurrentUser();
+        const userData = await userService.getUser();
         setResult(userData || null);
       } catch (error) {
         setError("Failed to load user data");
@@ -55,53 +56,17 @@ function LoadImageComponent() {
     setError(null);
 
     try {
-      // Bước 1: Lấy chữ ký từ API route
-      const signatureResponse = await fetch("/api/cloudinary-signature", {
-        headers: {
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIzMmEzOTU1ZC0xMjcxLTQ2ZTItYTM2Ny1mYjZjN2RhMGIyZWUiLCJyb2xlIjoiU1RVREVOVCIsImlhdCI6MTc1ODA4MzQyMSwiZXhwIjoxNzU4MDg3MDIxfQ.M7IzkQCqurXghGh7bezMWXApwqRKcdLfIvptmNBWw2M`,
-        },
-      });
+      // Upload image and get URL
+      const avatarUrl = await cloudinaryService.uploadImage(file);
 
-      if (!signatureResponse.ok) {
-        throw new Error("Failed to get signature");
-      }
+      // Bước 3: Cập nhật vào DB qua API
+      const updatedUser = await userService.updateUser({ avatarUrl });
 
-      const { signature, timestamp, cloudName, apiKey } =
-        await signatureResponse.json();
-
-      // Bước 2: Upload ảnh lên Cloudinary
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("timestamp", timestamp.toString());
-      formData.append("signature", signature);
-      formData.append("api_key", apiKey);
-      formData.append("folder", "avatars"); // Optional: folder lưu ảnh
-
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.secure_url) {
-        // Upload thành công, lấy URL
-        const avatarUrl = data.secure_url;
-
-        // Bước 3: Cập nhật vào DB qua API
-        const updatedUser = await userService.updateUser({ avatarUrl });
-
-        if (updatedUser) {
-          setResult(updatedUser); // Update state để hiển thị ngay
-          setFile(null); // Reset file
-        } else {
-          setError("Failed to update user avatar");
-        }
+      if (updatedUser) {
+        setResult(updatedUser); // Update state để hiển thị ngay
+        setFile(null); // Reset file
       } else {
-        setError("Upload failed: " + (data.error?.message || "Unknown error"));
+        setError("Failed to update user avatar");
       }
     } catch (error) {
       console.error("Upload error:", error);
