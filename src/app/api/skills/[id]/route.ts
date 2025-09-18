@@ -23,6 +23,7 @@ export async function GET(
     visibility: skill.visibility,
     ownerId: skill.ownerId,
     createdAt: skill.createdAt,
+    resources: skill.resources,
   };
 
   return NextResponse.json(responsePayload);
@@ -85,40 +86,43 @@ export async function PUT(
 }
 
 export async function DELETE(
-    req: Request,
-    { params }: { params: { id: string } }
-  ) {
-    try {
-      const payload = verifyToken(req);
-  
-      if (!payload) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-  
-      const { id } = params;
-  
-      const skill = await prisma.skills.findUnique({ where: { id } });
-      if (!skill || skill.isDeleted) {
-        return NextResponse.json({ error: "Skill not found" }, { status: 404 });
-      }
-  
-      // Quyền xóa:
-      // - Admin xóa được tất cả
-      // - Owner xóa được skill của mình
-      if (payload.role !== "ADMIN" && payload.userId !== skill.ownerId) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
-  
-      // Soft delete
-      const deleted = await prisma.skills.update({
-        where: { id },
-        data: { isDeleted: true },
-        select: { id: true, title: true, isDeleted: true },
-      });
-  
-      return NextResponse.json({ message: "Skill deleted", skill: deleted });
-    } catch (error) {
-      console.error("Delete skill error:", error);
-      return NextResponse.json({ error: "Failed to delete skill" }, { status: 500 });
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const payload = verifyToken(req);
+
+    if (!payload) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { id } = params;
+
+    const skill = await prisma.skills.findUnique({ where: { id } });
+    if (!skill || skill.isDeleted) {
+      return NextResponse.json({ error: "Skill not found" }, { status: 404 });
+    }
+
+    // Quyền xóa:
+    // - Admin xóa được tất cả
+    // - Owner xóa được skill của mình
+    if (payload.role !== "ADMIN" && payload.userId !== skill.ownerId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Soft delete
+    const deleted = await prisma.skills.update({
+      where: { id },
+      data: { isDeleted: true },
+      select: { id: true, title: true, isDeleted: true },
+    });
+
+    return NextResponse.json({ message: "Skill deleted", skill: deleted });
+  } catch (error) {
+    console.error("Delete skill error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete skill" },
+      { status: 500 }
+    );
   }
+}

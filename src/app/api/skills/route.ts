@@ -13,60 +13,18 @@ export async function GET(req: Request) {
       skills = await prisma.skills.findMany({
         where: { isDeleted: false, visibility: "PUBLIC" },
         orderBy: { createdAt: "desc" },
-
-        include: {
-          resources: {
-            orderBy: { ordering: "asc" },
-            select: {
-              id: true,
-              title: true,
-              resourceType: true,
-              url: true,
-              content: true,
-              ordering: true,
-            },
-          },
-        },
       });
     } else if (payload.role === "ADMIN") {
       // Admin → thấy tất cả
       skills = await prisma.skills.findMany({
         // where: { isDeleted: false },
         orderBy: { createdAt: "desc" },
-
-        include: {
-          resources: {
-            orderBy: { ordering: "asc" },
-            select: {
-              id: true,
-              title: true,
-              resourceType: true,
-              url: true,
-              content: true,
-              ordering: true,
-            },
-          },
-        },
       });
     } else if (payload.role === "STUDENT") {
       // Student → chỉ thấy PUBLIC
       skills = await prisma.skills.findMany({
         where: { isDeleted: false, visibility: "PUBLIC" },
         orderBy: { createdAt: "desc" },
-
-        include: {
-          resources: {
-            orderBy: { ordering: "asc" },
-            select: {
-              id: true,
-              title: true,
-              resourceType: true,
-              url: true,
-              content: true,
-              ordering: true,
-            },
-          },
-        },
       });
     }
 

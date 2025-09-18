@@ -6,14 +6,10 @@ export async function checkVisibility(req: Request, skillId: string) {
   // Lấy thông tin skill
   const skill = await prisma.skills.findUnique({
     where: { id: skillId },
-    select: {
-      id: true,
-      ownerId: true,
-      visibility: true,
-      isDeleted: true,
-      title: true,
-      description: true,
-      createdAt: true,
+    include: {
+      resources: {
+        orderBy: { ordering: "asc" },
+      },
     },
   });
 
