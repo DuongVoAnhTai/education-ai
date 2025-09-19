@@ -16,7 +16,7 @@ export async function GET(
     }
 
     // Chỉ cho phép ADMIN truy cập
-    if (!["ADMIN"].includes(payload.role)) {
+    if (payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Permission denied" }, { status: 403 });
     }
 
@@ -25,7 +25,7 @@ export async function GET(
     const user = await prisma.users.findUnique({
       where: {
         id: userId,
-        isDeleted: false, // Không lấy user đã bị xóa
+        // isDeleted: false, // Không lấy user đã bị xóa
         role: "STUDENT", // Chỉ lấy thông tin học sinh
       },
       select: {
@@ -59,7 +59,7 @@ export async function PUT(
 ) {
   try {
     const payload = verifyToken(req);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -68,7 +68,7 @@ export async function PUT(
 
     // Check if user exists
     const existingUser = await prisma.users.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingUser) {
@@ -92,12 +92,11 @@ export async function PUT(
         fullName: true,
         role: true,
         avatarUrl: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
 
     return NextResponse.json({ user: updatedUser });
-
   } catch (error) {
     console.error("Update user error:", error);
     return NextResponse.json(
@@ -113,7 +112,7 @@ export async function DELETE(
 ) {
   try {
     const payload = verifyToken(req);
-    if (!payload || payload.role !== 'ADMIN') {
+    if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -122,14 +121,13 @@ export async function DELETE(
     // Soft delete user
     await prisma.users.update({
       where: { id },
-      data: { isDeleted: true }
+      data: { isDeleted: true },
     });
 
     return NextResponse.json(
       { message: "User deleted successfully" },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Delete user error:", error);
     return NextResponse.json(
