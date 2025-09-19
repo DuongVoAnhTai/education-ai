@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
-async function UserPage({ params }: { params: Promise<{ id: number }> }) {
+async function UserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await prisma.user.findUnique({
+  const user = await prisma.users.findUnique({
     where: {
       id: id,
     },

@@ -10,6 +10,10 @@ export async function checkVisibility(req: Request, skillId: string) {
       resources: {
         orderBy: { ordering: "asc" },
       },
+
+      exercises: {
+        orderBy: {ordering: "asc"},
+      },
     },
   });
 

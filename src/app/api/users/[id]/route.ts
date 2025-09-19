@@ -63,7 +63,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { email, username, fullName, role, isDeleted } = await req.json();
 
     // Check if user exists
@@ -117,7 +117,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Soft delete user
     await prisma.users.update({

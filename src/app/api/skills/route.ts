@@ -82,9 +82,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ skill }, { status: 201 });
   } catch (error) {
-    console.error("Create skills error:", error);
+    console.error("Create skill error:", error);
     return NextResponse.json(
-      { error: "Failed to create skills" },
+      { error: "Failed to create skill" },
       { status: 500 }
     );
   }

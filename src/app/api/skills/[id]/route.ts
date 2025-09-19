@@ -7,7 +7,10 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const visibilityResult = await checkVisibility(req, params.id);
+
+  const { id } = await params;
+
+  const visibilityResult = await checkVisibility(req, id);
   if (visibilityResult instanceof NextResponse) {
     return visibilityResult; // Trả về response lỗi (401/403/404)
   }
@@ -24,6 +27,7 @@ export async function GET(
     ownerId: skill.ownerId,
     createdAt: skill.createdAt,
     resources: skill.resources,
+    exercises: skill.exercises,
   };
 
   return NextResponse.json(responsePayload);
@@ -40,7 +44,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     const { title, description, visibility, isDeleted } = await req.json();
 
     // Lấy skill
@@ -96,7 +100,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     const skill = await prisma.skills.findUnique({ where: { id } });
     if (!skill || skill.isDeleted) {
