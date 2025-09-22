@@ -7,12 +7,17 @@ export const useSocket = (token: string) => {
   useEffect(() => {
     if (!token) return;
 
-    socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
-      auth: { token }, // Gửi token để auth
-    });
+    socketRef.current = io(
+      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001",
+      {
+        auth: { token }, // Gửi token để auth
+      }
+    );
 
-    socketRef.current.on('connect', () => console.log('Socket connected'));
-    socketRef.current.on('connect_error', (err: Error) => console.error('Connection error:', err));
+    socketRef.current.on("connect", () => console.log("Socket connected"));
+    socketRef.current.on("connect_error", (err: Error) =>
+      console.error("Connection error:", err)
+    );
 
     return () => {
       socketRef.current?.disconnect();
@@ -20,20 +25,29 @@ export const useSocket = (token: string) => {
   }, [token]);
 
   const joinRoom = (conversationId: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    socketRef.current?.emit('join-room', { conversationId }, (response: any) => {
-      if (response.error) console.error(response.error);
-    });
+    socketRef.current?.emit(
+      "join-room",
+      { conversationId },
+      (response: any) => {
+        if (response.error) console.error(response.error);
+      }
+    );
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sendMessage = (conversationId: string, content: string, callback?: (response: any) => void) => {
-    socketRef.current?.emit('send-message', { conversationId, content }, callback);
+  const sendMessage = (
+    conversationId: string,
+    content: string,
+    callback?: (response: any) => void
+  ) => {
+    socketRef.current?.emit(
+      "send-message",
+      { conversationId, content },
+      callback
+    );
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onNewMessage = (callback: (message: any) => void) => {
-    socketRef.current?.on('new-message', callback);
+    socketRef.current?.on("new-message", callback);
   };
 
   return { joinRoom, sendMessage, onNewMessage };

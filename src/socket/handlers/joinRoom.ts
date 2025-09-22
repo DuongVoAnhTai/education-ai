@@ -4,7 +4,6 @@ import { Socket } from "socket.io";
 export const handleJoinRoom = async (
   socket: Socket,
   data: { conversationId: string },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ack: (response: any) => void
 ) => {
   const { conversationId } = data;

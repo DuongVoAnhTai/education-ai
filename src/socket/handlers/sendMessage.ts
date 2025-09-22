@@ -5,7 +5,6 @@ export const handleSendMessage = async (
   socket: Socket,
   io: Server,
   data: { conversationId: string; content: string },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ack: (response: any) => void
 ) => {
   const { conversationId, content } = data;

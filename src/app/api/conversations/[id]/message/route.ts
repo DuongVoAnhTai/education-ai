@@ -7,6 +7,8 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
+
     const payload = verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -17,12 +19,10 @@ export async function GET(
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
     const offset = (page - 1) * limit;
 
-    const { id: conversationId } = params;
-
     // Check if user is participant
     const participant = await prisma.conversationParticipants.findFirst({
       where: {
-        conversationId,
+        conversationId: id,
         userId: payload.userId,
         isAi: false,
       },
@@ -41,7 +41,7 @@ export async function GET(
     const [messages, total] = await Promise.all([
       prisma.messages.findMany({
         where: {
-          conversationId,
+          conversationId: id,
         },
         orderBy: { createdAt: "desc" },
         take: limit,
@@ -58,7 +58,7 @@ export async function GET(
         },
       }),
       prisma.messages.count({
-        where: { conversationId },
+        where: { conversationId: id },
       }),
     ]);
 
@@ -91,17 +91,17 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
+
     const payload = verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id: conversationId } = params;
-
     // Check if user is participant
     const participant = await prisma.conversationParticipants.findFirst({
       where: {
-        conversationId,
+        conversationId: id,
         userId: payload.userId,
         isAi: false,
       },
@@ -168,7 +168,7 @@ export async function POST(
     // Create message
     const message = await prisma.messages.create({
       data: {
-        conversationId,
+        conversationId: id,
         senderUserId: senderType === "USER" ? payload.userId : null,
         senderType,
         content: content.trim(),
@@ -187,7 +187,7 @@ export async function POST(
 
     // Update conversation updatedAt
     await prisma.conversations.update({
-      where: { id: conversationId },
+      where: { id: id },
       data: { updatedAt: new Date() },
     });
 
@@ -215,6 +215,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
+
     const payload = verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -246,6 +248,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = await params;
+
     const payload = verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

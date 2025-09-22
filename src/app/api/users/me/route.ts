@@ -30,7 +30,6 @@ export async function PUT(req: Request) {
 
     // Validate update data
     const allowedFields = ["fullName", "avatarUrl"];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     Object.keys(data).forEach((key) => {
