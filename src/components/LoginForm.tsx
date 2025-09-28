@@ -1,65 +1,54 @@
 "use client";
 
-import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faClose } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
+
+import "@/styles/styles.css";
 import { useAuth } from "@/hooks/useAuth";
 import * as authServices from "@/services/authServices";
-import { useAppRouter } from "@/utils/routeHelper";
 
 function LoginForm() {
   const { login } = useAuth();
 
-  const [email, setEmail] = useState("");
+  const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
-  );
-  const { goHome } = useAppRouter();
+  const [errors, setErrors] = useState<{
+    invalid?: string;
+    emailOrUsername?: string;
+    password?: string;
+  }>({});
+  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newErrors: { email?: string; password?: string } = {};
-
-    // validate email
-    if (!email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = "Invalid email format";
-    }
-
-    // validate password
-    if (!password) {
-      newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    }
-
-    // nếu có lỗi thì setErrors và dừng lại
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
 
     setErrors({});
 
     // Call API login
-    const res = await authServices.login(email, password);
+    const res = await authServices.login(emailOrUsername, password);
 
-    if (res.error) {
-      setErrors({ email: res.error, password: res.error });
+    if (res.errors) {
+      setErrors(res.errors);
+      console.log(res.errors);
+
       handleClear();
     } else {
       login(res.token);
-      goHome();
+      router.push("/");
       handleClear();
     }
   };
 
-  const handleChange = (field: "email" | "password", value: string) => {
-    if (field === "email") setEmail(value);
+  const handleChange = (
+    field: "emailOrUsername" | "password",
+    value: string
+  ) => {
+    if (field === "emailOrUsername") setEmailOrUsername(value);
     if (field === "password") setPassword(value);
 
     // clear lỗi field đó
@@ -67,9 +56,13 @@ function LoginForm() {
   };
 
   const handleClear = () => {
-    setEmail("");
+    setEmailOrUsername("");
     setPassword("");
     inputRef.current?.focus();
+  };
+
+  const handleCloseError = () => {
+    setErrors((prev) => ({ ...prev, invalid: undefined }));
   };
 
   return (
@@ -80,54 +73,59 @@ function LoginForm() {
         </h2>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
-          {/* Email */}
+          {errors.invalid && (
+            <p className="mb-4 rounded-md bg-red-100 p-3 text-center text-sm text-red-700 relative">
+              {errors.invalid}
+              <FontAwesomeIcon
+                icon={faClose}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-red-700 hover:text-red-500"
+                onClick={handleCloseError}
+              />
+            </p>
+          )}
+
+          {/* Email or Username */}
           <div>
-            <label
-              className={`mb-1 flex items-center text-sm font-medium ${
-                errors.email ? "text-red-500" : "text-gray-700"
-              }`}
+            <div
+              className={`input-group ${errors.emailOrUsername ? "error" : ""}`}
             >
-              <FontAwesomeIcon icon={faEnvelope} className="mr-1 h-3.5 w-3.5" />
-              Email *
-            </label>
-            <input
-              ref={inputRef}
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              className={`w-full rounded-md border p-2 focus:ring-2 ${
-                errors.email
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-200"
-                  : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
-              }`}
-            />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              <input
+                ref={inputRef}
+                type="text"
+                id="emailOrUsername"
+                value={emailOrUsername}
+                onChange={(e) =>
+                  handleChange("emailOrUsername", e.target.value)
+                }
+                placeholder=" "
+                className="input-field"
+              />
+              <label htmlFor="emailOrUsername" className="input-label">
+                Username or email address
+              </label>
+            </div>
+            {errors.emailOrUsername && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.emailOrUsername}
+              </p>
             )}
           </div>
 
           {/* Password */}
           <div>
-            <label
-              className={`mb-1 flex items-center text-sm font-medium ${
-                errors.password ? "text-red-500" : "text-gray-700"
-              }`}
-            >
-              <FontAwesomeIcon icon={faLock} className="mr-1 h-3.5 w-3.5" />
-              Password *
-            </label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => handleChange("password", e.target.value)}
-              className={`w-full rounded-md border p-2 focus:ring-2 ${
-                errors.password
-                  ? "border-red-500 focus:border-red-500 focus:ring-red-200"
-                  : "border-gray-300 focus:border-blue-500 focus:ring-blue-200"
-              }`}
-            />
+            <div className={`input-group ${errors.password ? "error" : ""}`}>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                placeholder=" "
+                className="input-field"
+              />
+              <label htmlFor="password" className="input-label">
+                Password
+              </label>
+            </div>
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
             )}
@@ -144,20 +142,20 @@ function LoginForm() {
 
         {/* Forgot password */}
         <div className="mt-4 text-center">
-          <a href="#" className="text-sm text-blue-600 hover:underline">
+          <Link href="#" className="text-sm text-blue-600 hover:underline">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         {/* Signup */}
         <div className="mt-4 text-center text-sm text-gray-600">
           Don’t have an account?{" "}
-          <a
+          <Link
             href="/signup"
             className="font-medium text-blue-600 hover:underline"
           >
             Sign up
-          </a>
+          </Link>
         </div>
       </div>
     </div>
