@@ -175,9 +175,6 @@ export default function SignUpForm() {
             {errors.password && (
               <p className="mt-1 text-sm text-red-500">{errors.password}</p>
             )}
-            <p className="text-sm text-gray-500 mt-1">
-              Password should be at least 6 characters
-            </p>
           </div>
 
           {/* Confirm Password */}
@@ -205,6 +202,20 @@ export default function SignUpForm() {
               </p>
             )}
           </div>
+
+          <p className="text-sm text-gray-500 mt-1">
+            - Password should be more than 8 characters.
+            <br />
+            - Password should contain:
+            <br />
+            <span className="pl-4">+ At least one uppercase letter</span>
+            <br />
+            <span className="pl-4">+ At least one lowercase letter</span>
+            <br />
+            <span className="pl-4">+ At least one digit</span>
+            <br />
+            <span className="pl-4">+ At least one special symbol</span>
+          </p>
 
           {/* Signup button */}
           <button

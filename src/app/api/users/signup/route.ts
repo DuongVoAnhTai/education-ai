@@ -42,10 +42,19 @@ export async function POST(req: Request) {
     }
 
     // Password validations
-    if (data.password && data.password.length < 6) {
-      errors.password = "Password is too short";
+    // Check password strength (uppercase, lowercase, digit, special char)
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+
+    if (!passwordRegex.test(data.password)) {
+      errors.password =
+        "Password must include at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol";
     }
 
+    if (data.password.length < 8) {
+      errors.password = "Password is too short";
+    }
+    
     if (
       data.password &&
       data.confirmPassword &&
@@ -53,7 +62,7 @@ export async function POST(req: Request) {
     ) {
       errors.confirmPassword = "Passwords do not match";
     }
-    
+
     // If there are any validation errors, return them all
     if (Object.keys(errors).length > 0) {
       return NextResponse.json({ errors }, { status: 400 });
