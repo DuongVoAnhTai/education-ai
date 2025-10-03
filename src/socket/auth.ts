@@ -1,17 +1,45 @@
 import { Socket } from "socket.io";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import { prisma } from "@/lib/prisma";
 
-export const authenticateSocket = (socket: Socket, next: (err?: Error) => void) => {
-  const token = socket.handshake.auth.token; // Client gửi token qua auth
+export const authenticateSocket = async (
+  socket: Socket,
+  next: (err?: Error) => void
+) => {
+  const token = socket.handshake.auth.token;
   if (!token) {
-    return next(new Error('Unauthorized: No token provided'));
+    return next(new Error("Unauthorized: No token provided"));
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret') as { userId: string; role: string };
-    socket.data.user = decoded; // Lưu user data vào socket để dùng sau
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error("JWT_SECRET is not defined");
+    }
+
+    const decoded = jwt.verify(token, secret) as {
+      userId: string;
+      role: string;
+    };
+
+    // Kiểm tra user tồn tại
+    const user = await prisma.users.findFirst({
+      where: { id: decoded.userId, isDeleted: false },
+      select: { id: true, username: true, role: true },
+    });
+
+    if (!user) {
+      return next(new Error("Unauthorized: User not found or deleted"));
+    }
+
+    socket.data.user = {
+      userId: user.id,
+      role: user.role,
+      username: user.username,
+    };
     next();
-  } catch (err) {
-    next(new Error('Unauthorized: Invalid token'));
+  } catch (err: any) {
+    console.error("Socket auth error:", err.message);
+    next(new Error(`Unauthorized: ${err.message}`));
   }
 };

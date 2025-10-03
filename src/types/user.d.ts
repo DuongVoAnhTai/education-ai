@@ -2,6 +2,7 @@ interface User {
   id: string;
   email: string;
   fullName: string | null;
+  username?: string;
   role: string;
   avatarUrl: string | null;
 }
@@ -18,4 +19,10 @@ interface ValidationErrorSignup {
 interface ValidationErrorLogin {
   emailOrUsername?: string;
   password?: string;
+}
+
+interface SearchUsersResponse {
+  success: boolean;
+  users?: User[];
+  error?: string;
 }

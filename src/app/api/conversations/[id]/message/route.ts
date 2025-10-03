@@ -14,11 +14,6 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
-    const offset = (page - 1) * limit;
-
     // Check if user is participant
     const participant = await prisma.conversationParticipants.findFirst({
       where: {
@@ -38,41 +33,27 @@ export async function GET(
       );
     }
 
-    const [messages, total] = await Promise.all([
-      prisma.messages.findMany({
-        where: {
-          conversationId: id,
-        },
-        orderBy: { createdAt: "desc" },
-        take: limit,
-        skip: offset,
-        include: {
-          sender: {
-            select: {
-              id: true,
-              username: true,
-              avatarUrl: true,
-              role: true,
-            },
+    const messages = await prisma.messages.findMany({
+      where: {
+        conversationId: id,
+      },
+      orderBy: { createdAt: "asc" }, // Sắp xếp từ cũ đến mới
+      include: {
+        sender: {
+          select: {
+            id: true,
+            username: true,
+            avatarUrl: true,
+            role: true,
           },
         },
-      }),
-      prisma.messages.count({
-        where: { conversationId: id },
-      }),
-    ]);
+      },
+    });
 
     return NextResponse.json({
       success: true,
-      messages: messages.reverse(), // Reverse để có thứ tự từ cũ đến mới
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-        hasNext: page * limit < total,
-        hasPrev: page > 1,
-      },
+      messages,
+      count: messages.length,
     });
   } catch (error) {
     console.error("Get messages error:", error);

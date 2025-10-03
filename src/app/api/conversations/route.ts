@@ -17,7 +17,7 @@ export async function GET(req: Request) {
         participants: {
           include: {
             user: {
-              select: { id: true, username: true, role: true, avatarUrl: true },
+              select: { id: true, username: true, fullName: true, role: true, avatarUrl: true },
             },
           },
         },
@@ -49,11 +49,27 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    // Xác thực token
     const payload = verifyToken(req);
-    if (!payload)
+    if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const { title, participantIds = [], isGroup, allowAi } = await req.json();
+    // Parse body
+    const {
+      title,
+      participantIds = [],
+      isGroup = false,
+      allowAi = false,
+    } = await req.json();
+
+    // Kiểm tra participantIds có hợp lệ không
+    if (!Array.isArray(participantIds)) {
+      return NextResponse.json(
+        { error: "participantIds must be an array" },
+        { status: 400 }
+      );
+    }
 
     // Validate participants exist (nếu không phải group chat với AI only)
     if (participantIds.length > 0) {
@@ -82,7 +98,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Check if 1-1 conversation already exists
+    // Check if 1-1 conversation already exists (chỉ áp dụng cho chat 1-1)
     if (!isGroup && participantIds.length === 1) {
       const existingConversation = await prisma.conversations.findFirst({
         where: {
@@ -95,7 +111,6 @@ export async function POST(req: Request) {
               isAi: false,
             },
           },
-          messages: { some: {} }, // Đã có message
         },
         select: { id: true },
       });
@@ -112,21 +127,21 @@ export async function POST(req: Request) {
       }
     }
 
+    // Tạo conversation
     const conversation = await prisma.conversations.create({
       data: {
         createdBy: payload.userId,
-        title,
-        isGroup: isGroup ?? false,
-        allowAi: allowAi ?? false,
+        title: title || null, // Đảm bảo title là null nếu không có
+        isGroup,
+        allowAi,
         participants: {
           create: [
-            { userId: payload.userId, isAi: false },
-            // Other participants
-            ...(participantIds || []).map((id: string) => ({
+            { userId: payload.userId, isAi: false }, // Thêm người tạo
+            // Thêm các participants khác
+            ...participantIds.map((id: string) => ({
               userId: id,
               isAi: false,
             })),
-            // ...(allowAi ? [{ userId: payload.userId, isAi: true }] : []), // thêm AI bot nếu bật
           ],
         },
       },
@@ -135,28 +150,31 @@ export async function POST(req: Request) {
           include: {
             user: { select: { id: true, username: true, avatarUrl: true } },
           },
-          select: { isAi: true },
         },
         messages: true,
       },
     });
 
-    // Thêm AI participant nếu allowAi=true (sau khi tạo conversation)
+    // Thêm AI participant nếu allowAi=true
     if (allowAi) {
       await prisma.conversationParticipants.create({
         data: {
           conversationId: conversation.id,
-          userId: payload.userId, // Use creator's userId for AI
+          userId: payload.userId, // Dùng userId của creator cho AI
           isAi: true,
         },
       });
     }
 
     return NextResponse.json({ conversation }, { status: 201 });
-  } catch (error) {
-    console.error("Create conversation error:", error);
+  } catch (error: any) {
+    console.error("Create conversation error:", {
+      message: error.message,
+      stack: error.stack,
+      participantIds: (error as any).participantIds,
+    });
     return NextResponse.json(
-      { error: "Failed to create conversation" },
+      { error: `Failed to create conversation: ${error.message}` },
       { status: 500 }
     );
   }

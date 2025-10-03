@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json(
-        { errors: { invalid: "Invalid email/username or password" } },
+        { errors: { invalid: "Incorrect email/username or password" } },
         { status: 400 }
       );
     }
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     const isValid = await bcrypt.compare(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json(
-        { errors: { invalid: "Invalid email/username or password" } },
+        { errors: { invalid: "Incorrect email/username or password" } },
         { status: 400 }
       );
     }
