@@ -17,7 +17,13 @@ export async function GET(req: Request) {
         participants: {
           include: {
             user: {
-              select: { id: true, username: true, fullName: true, role: true, avatarUrl: true },
+              select: {
+                id: true,
+                username: true,
+                fullName: true,
+                role: true,
+                avatarUrl: true,
+              },
             },
           },
         },
@@ -125,6 +131,20 @@ export async function POST(req: Request) {
           { status: 409 }
         );
       }
+    }
+
+    if (isGroup && participantIds.length < 2) {
+      return NextResponse.json(
+        { error: "Group chat requires at least 2 participants" },
+        { status: 400 }
+      );
+    }
+    if (participantIds.length > 100) {
+      // Giới hạn
+      return NextResponse.json(
+        { error: "Too many participants (max 100)" },
+        { status: 400 }
+      );
     }
 
     // Tạo conversation

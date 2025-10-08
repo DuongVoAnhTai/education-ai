@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import * as conversationService from "@/services/conversationServices";
-import * as userService from "@/services/userServices";
-import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import * as conversationService from '@/services/conversationServices';
+import * as userService from '@/services/userServices';
+import { useAuth } from '@/hooks/useAuth';
 
 function MessagesComponent() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-
   const [showModal, setShowModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchedUsers, setSearchedUsers] = useState<User[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [createError, setCreateError] = useState<string | null>(null);
-
+  const [isGroupChat, setIsGroupChat] = useState(false);
+  const [groupTitle, setGroupTitle] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +26,10 @@ function MessagesComponent() {
         if (res.error) {
           setError(res.error);
         } else {
-          
           setConversations(res.conversations || []);
         }
       } catch (err) {
-        setError("Failed to load conversations");
+        setError('Failed to load conversations');
       } finally {
         setLoading(false);
       }
@@ -42,56 +41,69 @@ function MessagesComponent() {
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const q = e.target.value;
     setSearchQuery(q);
-    if (q.length < 2) return setSearchedUsers([]);
+    if (q.length < 2) {
+      setSearchedUsers([]);
+      return;
+    }
 
     try {
       const res = await userService.searchUsers(q);
-
       if (res?.users) {
-        setSearchedUsers(res.users); // Giả sử response có { users: User[] }
+        setSearchedUsers(res.users);
       }
     } catch (err) {
-      console.error("Search error:", err);
+      console.error('Search error:', err);
     }
   };
 
+  const handleSelectUser = (userId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+    );
+  };
+
   const handleCreate = async () => {
-    if (!selectedUserId) return setCreateError("Please select a user");
+    if (selectedUserIds.length === 0) {
+      setCreateError('Please select at least one user');
+      return;
+    }
 
     try {
       const res = await conversationService.createConversation(
-        undefined,
-        [selectedUserId],
-        false,
+        isGroupChat ? groupTitle || undefined : undefined,
+        selectedUserIds,
+        isGroupChat,
         false
       );
       if (res.error) {
         if (res.existingConversationId) {
           alert(`Conversation already exists: ${res.existingConversationId}`);
+          window.location.href = `/messages/${res.existingConversationId}`;
         } else {
           setCreateError(res.error);
         }
       } else {
-        // Refresh list
         const updated = await conversationService.getConversations();
         setConversations(updated.conversations || []);
         setShowModal(false);
-        setSelectedUserId(null);
-        setSearchQuery("");
+        setSelectedUserIds([]);
+        setSearchQuery('');
         setSearchedUsers([]);
+        setIsGroupChat(false);
+        setGroupTitle('');
+        window.location.href = `/messages/${res.conversation.id}`;
       }
     } catch (err) {
-      setCreateError("Failed to create conversation");
+      setCreateError('Failed to create conversation');
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
-    );
-  if (error) return <div className="text-red-500 text-center">{error}</div>;
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+  if (error) {
+    return <div className="text-red-500 text-center">{error}</div>;
+  }
 
   return (
     <div className="container mx-auto p-4">
@@ -100,13 +112,30 @@ function MessagesComponent() {
         onClick={() => setShowModal(true)}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
       >
-        New 1-1 Chat
+        New Chat
       </button>
-
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-96">
             <h2 className="text-xl font-bold mb-4">Create New Chat</h2>
+            <label className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                checked={isGroupChat}
+                onChange={(e) => setIsGroupChat(e.target.checked)}
+                className="mr-2"
+              />
+              Group Chat
+            </label>
+            {isGroupChat && (
+              <input
+                type="text"
+                value={groupTitle}
+                onChange={(e) => setGroupTitle(e.target.value)}
+                placeholder="Group name (optional)"
+                className="w-full border p-2 mb-4 rounded"
+              />
+            )}
             <input
               type="text"
               value={searchQuery}
@@ -118,20 +147,17 @@ function MessagesComponent() {
               {searchedUsers.map((user) => (
                 <li
                   key={user.id}
-                  onClick={() => setSelectedUserId(user.id)}
+                  onClick={() => handleSelectUser(user.id)}
                   className={`cursor-pointer p-2 rounded ${
-                    selectedUserId === user.id ? "bg-blue-100" : ""
+                    selectedUserIds.includes(user.id) ? 'bg-blue-100' : ''
                   }`}
                 >
                   <Image
-                    src={
-                      user.avatarUrl ||
-                      "https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg"
-                    }
+                    src={user.avatarUrl || 'https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg'}
                     alt="Avatar"
                     className="w-6 h-6 rounded-full inline mr-2"
-                    width={100}
-                    height={100}
+                    width={24}
+                    height={24}
                   />
                   {user.fullName}
                 </li>
@@ -157,34 +183,30 @@ function MessagesComponent() {
       )}
       <ul className="space-y-4">
         {conversations.map((conv) => {
-          // Lấy tên hiển thị: Nếu 1-1, lấy username của participant khác (không phải AI)
           const otherParticipant = conv.participants.find(
             (p) => !p.isAi && p.userId !== user?.userId
           );
-          const displayName =
-            conv.title || otherParticipant?.user.fullName || "Untitled";
-
-          // Last message
-          const lastMessage = conv.messages[0]?.content || "No messages yet";
+          const displayName = conv.isGroup
+            ? conv.title || `Group with ${conv.participants.length} members`
+            : otherParticipant?.user.fullName || 'Untitled';
+          const lastMessage = conv.messages[0]?.content || 'No messages yet';
 
           return (
             <li
               key={conv.id}
-              className="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4"
+              className="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4 cursor-pointer"
+              onClick={() => window.location.href = `/messages/${conv.id}`}
             >
               <Image
-                src={
-                  otherParticipant?.user.avatarUrl ||
-                  "https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg"
-                }
+                src={otherParticipant?.user.avatarUrl || 'https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg'}
                 alt="Avatar"
                 className="w-10 h-10 rounded-full"
-                width={100}
-                height={100}
+                width={40}
+                height={40}
               />
               <div className="flex-1">
                 <h2 className="font-semibold">{displayName}</h2>
-                <p className="text-gray-500 truncate">{lastMessage}</p>
+                <p className="text-gray-500 truncate text-sm">{lastMessage}</p>
               </div>
               <span className="text-sm text-gray-400">
                 {new Date(conv.updatedAt).toLocaleTimeString()}

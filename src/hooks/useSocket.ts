@@ -53,6 +53,12 @@ export const useSocket = (token: string) => {
     );
   };
 
+  const sendTyping = (conversationId: string) => {
+    if (socketRef.current) {
+      socketRef.current.emit('typing', { conversationId });
+    }
+  };
+
   const onNewMessage = (callback: (message: any) => void) => {
     socketRef.current?.on("new-message", callback);
     return () => socketRef.current?.off("new-message", callback);
@@ -62,5 +68,12 @@ export const useSocket = (token: string) => {
     socketRef.current?.disconnect();
   };
 
-  return { joinRoom, sendMessage, onNewMessage, disconnect };
+  return {
+    socket: socketRef.current,
+    joinRoom,
+    sendMessage,
+    sendTyping,
+    onNewMessage,
+    disconnect,
+  };
 };
