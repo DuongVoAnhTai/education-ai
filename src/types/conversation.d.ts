@@ -6,10 +6,12 @@ interface ConversationParticipant {
 
 interface Message {
   id: string;
+  conversationId: string;
   content: string;
-  createdAt: Date;
-  senderType: 'USER' | 'AI' | 'SYSTEM';
-  sender: User;
+  contentType: string;
+  senderType: string;
+  sender: { id: string; username: string; avatarUrl: string };
+  createdAt: string;
 }
 
 interface Conversation {

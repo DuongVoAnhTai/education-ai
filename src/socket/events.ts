@@ -9,8 +9,8 @@ export const setupEventHandlers = (socket: Socket, io: Server) => {
   socket.on("send-message", (data, ack) =>
     handleSendMessage(socket, io, data, ack)
   );
-  socket.on("leave-room", (data, ack) =>
-    handleLeaveRoom(socket, io, data, ack)
-  );
+  socket.on("leave-room", (data) => {
+    handleLeaveRoom(socket, data);
+  });
   socket.on("typing", (data) => handleTyping(socket, io, data));
 };

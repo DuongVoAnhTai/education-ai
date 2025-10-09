@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import io, { Socket } from "socket.io-client";
 
 interface SocketResponse {
@@ -30,43 +30,56 @@ export const useSocket = (token: string) => {
     };
   }, [token]);
 
-  const joinRoom = (conversationId: string) => {
-    socketRef.current?.emit(
-      "join-room",
-      { conversationId },
-      (response: SocketResponse) => {
-        if (response.error) console.error("Join room error:", response.error);
-        else console.log(response.message);
-      }
-    );
-  };
-
-  const sendMessage = (
-    conversationId: string,
-    content: string,
-    callback?: (response: SocketResponse) => void
-  ) => {
-    socketRef.current?.emit(
-      "send-message",
-      { conversationId, content },
-      callback
-    );
-  };
-
-  const sendTyping = (conversationId: string) => {
-    if (socketRef.current) {
-      socketRef.current.emit('typing', { conversationId });
+  const joinRoom = useCallback((conversationId: string) => {
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit(
+        "join-room",
+        { conversationId },
+        (response: SocketResponse) => {
+          if (response.error) {
+            console.error("Join room error:", response.error);
+          } else {
+            console.log(`Joined room ${conversationId}`);
+          }
+        }
+      );
     }
-  };
+  }, []);
 
-  const onNewMessage = (callback: (message: any) => void) => {
-    socketRef.current?.on("new-message", callback);
-    return () => socketRef.current?.off("new-message", callback);
-  };
+  const sendTyping = useCallback((conversationId: string) => {
+    if (socketRef.current) {
+      socketRef.current.emit("typing", { conversationId });
+    }
+  }, []);
 
-  const disconnect = () => {
+  const sendMessage = useCallback(
+    (
+      conversationId: string,
+      content: string,
+      callback?: (response: SocketResponse) => void
+    ) => {
+      if (socketRef.current) {
+        socketRef.current.emit(
+          "send-message",
+          { conversationId, content },
+          callback
+        );
+      }
+    },
+    []
+  );
+
+  const onNewMessage = useCallback((callback: (message: any) => void) => {
+    if (!socketRef.current) return () => undefined;
+    socketRef.current.on("new-message", callback);
+    return () => {
+      socketRef.current?.off("new-message", callback);
+    };
+  }, []);
+
+  const disconnect = useCallback(() => {
     socketRef.current?.disconnect();
-  };
+  }, []);
 
   return {
     socket: socketRef.current,

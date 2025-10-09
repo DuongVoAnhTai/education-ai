@@ -1,31 +1,22 @@
+import { Socket } from "socket.io";
 import { prisma } from "@/lib/prisma";
-import { Server, Socket } from "socket.io";
 
 export const handleLeaveRoom = async (
   socket: Socket,
-  io: Server,
-  data: { conversationId: string },
-  ack: (response: any) => void
+  data: { conversationId: string }
 ) => {
   const { conversationId } = data;
   const userId = socket.data.user.userId;
 
   try {
-    // Xóa hoặc soft-delete participant
-    await prisma.conversationParticipants.delete({
-      where: {
-        conversationId_userId_isAi: { conversationId, userId, isAi: false },
-      },
+    const participant = await prisma.conversationParticipants.findFirst({
+      where: { conversationId, userId, isAi: false },
     });
+    if (!participant) return;
 
     socket.leave(conversationId);
-    io.to(conversationId).emit("user-left", {
-      userId,
-      message: "User left the group",
-    });
-
-    ack({ success: true });
+    console.log(`User ${userId} left room ${conversationId}`);
   } catch (error: any) {
-    ack({ error: "Failed to leave room" });
+    console.error(`Leave room error for user ${userId}:`, error.message);
   }
 };
