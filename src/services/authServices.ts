@@ -2,7 +2,7 @@ import * as httpRequest from "@/utils/httpRequest";
 
 export const login = async (emailOrUsername: string, password: string) => {
   try {
-    const res = await httpRequest.post("users/login", { emailOrUsername, password });
+    const res = await httpRequest.post("auth/login", { emailOrUsername, password });
 
     return res;
   } catch (error: any) {
@@ -22,7 +22,7 @@ export const signup = async (
   confirmPassword: string
 ) => {
   try {
-    const res = await httpRequest.post("users/signup", {
+    const res = await httpRequest.post("auth/signup", {
       email,
       username,
       firstName,

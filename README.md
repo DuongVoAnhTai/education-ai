@@ -2,11 +2,10 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### 1. Run the development server:
 
 ```bash
 npm install
-npx prisma generate
 npm run dev
 # or
 yarn dev
@@ -16,21 +15,25 @@ pnpm dev
 bun dev
 ```
 
-## USER MANUAL:
-
-- We use PostGreSQL for this project, we will use it on 'supabase' website which support for PostGre
-
-- To push data in file /prisma/schema.prisma to supabase, we will use:
-
+### 2. Database Setup
 ```bash
-npx prisma migrate dev --name init
-# or
-npx prisma db push
-# (search prisma document for details)
-```
-    
-- To seed db, we will use:
+# Generate Prisma client
+npx prisma generate
 
-```bash 
-npx prisma db seed
-```    
+# Run migrations
+npx prisma migrate 
+```
+
+## 🌐 API Documentation
+### Available Endpoints
+
+#### Authentication
+- `POST /api/auth/login` - User login
+- `POST /api/auth/signup` - User registration
+
+#### Users
+- `GET /api/users` - Get all users (protected)
+- `GET /api/users/:id` - Get user by ID (protected)
+- `GET /api/users/me` - Get user user profile (protected)
+- `PUT /api/users/:id` - Update user (protected)
+- `DELETE /api//users/:id` - Delete user (protected)
