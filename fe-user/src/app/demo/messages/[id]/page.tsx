@@ -1,4 +1,4 @@
-import MessageComponent from "@/components/Message";
+import MessageComponent from "../../../../components/Message";
 
 export default function MessagesPage() {
   return <MessageComponent />;

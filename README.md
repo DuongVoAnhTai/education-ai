@@ -1,39 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Education-AI (monorepo)
 
-## Getting Started
+This repository contains two projects:
+----- Stand at root folder
+- `fe-administrator` — frontend (Nextjs) - npm dev:fe
+- `fe-user` — frontend (Nextjs) - npm dev:fe
 
-### 1. Run the development server:
+This repo is set up as a npm workspace. The preferred package manager is npm.
 
-```bash
+## Quick start (recommended: npm)
+
+You can run the package scripts directly with npm:
+
+```powershell
+# At root
+npm run dev:fe-user
+npm run dev:fe-admin
+```
+
+```powershell
+# frontend
+cd ../fe-user
 npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+cd ../fe-administrator
+npm install
+npm run dev
 ```
-
-### 2. Database Setup
-```bash
-# Generate Prisma client
-npx prisma generate
-
-# Run migrations
-npx prisma migrate 
-```
-
-## 🌐 API Documentation
-### Available Endpoints
-
-#### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/signup` - User registration
-
-#### Users
-- `GET /api/users` - Get all users (protected)
-- `GET /api/users/:id` - Get user by ID (protected)
-- `GET /api/users/me` - Get user user profile (protected)
-- `PUT /api/users/:id` - Update user (protected)
-- `DELETE /api//users/:id` - Delete user (protected)

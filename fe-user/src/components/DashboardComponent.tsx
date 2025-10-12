@@ -1,6 +1,5 @@
 "use client";
 
-import MessageComponent from "@/components/Message";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   BookOpen,
@@ -22,6 +21,7 @@ import {
   Menu,
   Camera,
 } from "lucide-react";
+import MessageComponent from "./Message";
 
 /** =========================
  * Types
@@ -440,7 +440,10 @@ const EducationAIDashboard: React.FC = () => {
     setSkills((prev) =>
       prev.map((s) => {
         if (s.id !== id || s.locked) return s;
-        const lessonsCompleted = Math.min(s.lessonsCompleted + 1, s.totalLessons);
+        const lessonsCompleted = Math.min(
+          s.lessonsCompleted + 1,
+          s.totalLessons
+        );
         const progress = Math.round((lessonsCompleted / s.totalLessons) * 100);
         return { ...s, lessonsCompleted, progress };
       })
