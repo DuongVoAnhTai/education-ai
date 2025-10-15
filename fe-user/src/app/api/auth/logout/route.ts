@@ -4,13 +4,19 @@ import { cookies } from "next/headers";
 export async function POST() {
   try {
     // Xóa cookie chứa token
-    const cookieStore = cookies();
-    (await cookieStore).delete("token");
-
-    return NextResponse.json(
+    const res = NextResponse.json(
       { message: "Logged out successfully" },
       { status: 200 }
     );
+
+    res.cookies.set("token", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0, // Lam cookie het han ngay lap tuc
+    });
+
+    return res;
   } catch (error) {
     console.error("Logout error:", error);
     return NextResponse.json({ error: "Failed to logout" }, { status: 500 });

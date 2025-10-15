@@ -46,10 +46,10 @@ export async function POST(req: Request) {
 
     // Tạo JWT token
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
-      expiresIn: "1h",
+      expiresIn: "3h",
     });
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       token,
       user: {
         id: user.id,
@@ -58,6 +58,14 @@ export async function POST(req: Request) {
         role: user.role,
       },
     });
+
+    res.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+
+    return res;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

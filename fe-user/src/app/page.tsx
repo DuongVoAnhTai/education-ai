@@ -1,10 +1,9 @@
-import LoadImageComponent from "@/components/LoadImageComponent";
+import EducationAIDashboard from "@/components/DashboardComponent";
 
 function Home() {
   return (
     <div>
-      <h1>Home page</h1>
-      <LoadImageComponent />
+      <EducationAIDashboard />
     </div>
   );
 }
