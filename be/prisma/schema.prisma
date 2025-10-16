@@ -1,0 +1,239 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ------------------------------
+// Enums
+// ------------------------------
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  UNLISTED
+}
+
+enum ResourceType {
+  LINK
+  ARTICLE
+  VIDEO
+  FILE
+  NOTE
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  SHORT_ANSWER
+  LONG_ANSWER
+  FILL_BLANK
+  MATCHING
+}
+
+enum MatchType {
+  EXACT
+  CASE_INSENSITIVE
+  REGEX
+  CONTAINS
+}
+
+enum SenderType {
+  USER
+  AI
+  SYSTEM
+}
+
+enum ContentType {
+  TEXT
+  HTML
+  JSON
+  COMMAND
+}
+
+// ------------------------------
+// Models
+// ------------------------------
+model Users {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String?  @map("full_name")
+  role         String?
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  isDeleted    Boolean  @default(false) @map("is_deleted")
+
+  // Relations
+  skills        Skills[]
+  userAnswers   UserAnswers[]
+  conversations Conversations[]
+  messages      Messages[]
+  participants  ConversationParticipants[]
+}
+
+model Skills {
+  id          String     @id @default(uuid())
+  ownerId     String     @map("owner_id")
+  title       String
+  description String?
+  visibility  Visibility @default(PRIVATE)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  isDeleted   Boolean    @default(false) @map("is_deleted")
+
+  // Relations
+  owner     Users               @relation(fields: [ownerId], references: [id])
+  exercises Exercises[]
+  resources LearningResources[]
+  tags      SkillTags[]
+}
+
+model Tags {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  skills SkillTags[]
+}
+
+model SkillTags {
+  skillId String @map("skill_id")
+  tagId   String @map("tag_id")
+
+  skill Skills @relation(fields: [skillId], references: [id])
+  tag   Tags   @relation(fields: [tagId], references: [id])
+
+  @@id([skillId, tagId])
+}
+
+model LearningResources {
+  id           String        @id @default(uuid())
+  skillId      String?       @map("skill_id")
+  title        String?
+  resourceType ResourceType? @map("resource_type")
+  url          String?
+  content      String?
+  ordering     Int?
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  skill Skills? @relation(fields: [skillId], references: [id])
+}
+
+model Exercises {
+  id               String   @id @default(uuid())
+  skillId          String?  @map("skill_id")
+  title            String?
+  description      String?
+  ordering         Int?
+  timeLimitSeconds Int?     @map("time_limit_seconds")
+  passScore        Float?   @map("pass_score")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  skill     Skills?     @relation(fields: [skillId], references: [id])
+  questions Questions[]
+}
+
+model Questions {
+  id           String       @id @default(uuid())
+  exerciseId   String?      @map("exercise_id")
+  questionType QuestionType @map("question_type")
+  prompt       String
+  points       Float        @default(1)
+  ordering     Int?
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  exercise    Exercises?           @relation(fields: [exerciseId], references: [id])
+  options     QuestionOptions[]
+  answerKeys  QuestionAnswerKeys[]
+  userAnswers UserAnswers[]
+}
+
+model QuestionOptions {
+  id         String  @id @default(uuid())
+  questionId String? @map("question_id")
+  content    String
+  isCorrect  Boolean @default(false) @map("is_correct")
+  ordering   Int?
+
+  question    Questions?    @relation(fields: [questionId], references: [id])
+  userAnswers UserAnswers[]
+}
+
+model QuestionAnswerKeys {
+  id         String    @id @default(uuid())
+  questionId String?   @map("question_id")
+  answerText String    @map("answer_text")
+  matchType  MatchType @map("match_type")
+
+  question Questions? @relation(fields: [questionId], references: [id])
+}
+
+model UserAnswers {
+  id               String   @id @default(uuid())
+  userId           String?  @map("user_id")
+  questionId       String?  @map("question_id")
+  selectedOptionId String?  @map("selected_option_id")
+  answerText       String?  @map("answer_text")
+  score            Float?
+  submittedAt      DateTime @default(now()) @map("submitted_at")
+
+  user     Users?           @relation(fields: [userId], references: [id])
+  question Questions?       @relation(fields: [questionId], references: [id])
+  option   QuestionOptions? @relation(fields: [selectedOptionId], references: [id])
+}
+
+model Conversations {
+  id        String   @id @default(uuid())
+  createdBy String?  @map("created_by")
+  title     String?
+  isGroup   Boolean  @default(false) @map("is_group")
+  allowAi   Boolean  @default(false) @map("allow_ai")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  creator      Users?                     @relation(fields: [createdBy], references: [id])
+  participants ConversationParticipants[]
+  messages     Messages[]
+}
+
+model ConversationParticipants {
+  conversationId String   @map("conversation_id")
+  userId         String   @map("user_id")
+  isAi           Boolean  @default(false) @map("is_ai")
+  isMuted        Boolean  @default(false) @map("is_muted")
+  joinedAt       DateTime @default(now()) @map("joined_at")
+
+  conversation Conversations @relation(fields: [conversationId], references: [id])
+  user         Users         @relation(fields: [userId], references: [id])
+
+  @@id([conversationId, userId, isAi])
+}
+
+model Messages {
+  id             String      @id @default(uuid())
+  conversationId String      @map("conversation_id")
+  senderUserId   String?     @map("sender_user_id")
+  senderType     SenderType  @map("sender_type")
+  content        String?
+  contentType    ContentType @default(TEXT) @map("content_type")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  conversation Conversations @relation(fields: [conversationId], references: [id])
+  sender       Users?        @relation(fields: [senderUserId], references: [id])
+}
