@@ -3,25 +3,29 @@
   "private": true,
   "version": "1.0.0",
   "workspaces": [
+    "be",
     "fe-administrator",
     "fe-user"
   ],
   "scripts": {
+    "install:be": "npm --workspace be install",
     "install:fe-admin": "npm --workspace fe-administrator install",
     "install:fe-user": "npm --workspace fe-user install",
 
     "dev:fe-admin": "npm --workspace fe-administrator run dev",
     "dev:fe-user": "npm --workspace fe-user run dev",
+    "dev:be": "npm --workspace be run dev",
 
     "build:fe-admin": "npm --workspace fe-administrator run build",
     "build:fe-user": "npm --workspace fe-user run build",
 
     "start:fe-admin": "npm --workspace fe-administrator run start",
     "start:fe-user": "npm --workspace fe-user run start",
+    "start:be": "npm --workspace be run start",
 
     "socket:fe-user": "npm --workspace fe-user run socket:dev",
 
-    "dev": "npm run dev:fe-administrator & npm run dev:fe-user"
+    "dev": "npm run dev:be & npm run dev:fe-administrator & npm run dev:fe-user"
   },
   "devDependencies": {
     "eslint-config-react-app": "^7.0.1",

@@ -28,12 +28,12 @@ npx prisma migrate
 ### Available Endpoints
 
 #### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/signup` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/signup` - User registration
 
 #### Users
-- `GET /api/users` - Get all users (protected)
-- `GET /api/users/:id` - Get user by ID (protected)
-- `GET /api/users/me` - Get user user profile (protected)
-- `PUT /api/users/:id` - Update user (protected)
-- `DELETE /api//users/:id` - Delete user (protected)
+- `GET /api/v1/users` - Get all users (protected)
+- `GET /api/v1/users/:id` - Get user by ID (protected)
+- `GET /api/v1/users/me` - Get user user profile (protected)
+- `PUT /api/v1/users/:id` - Update user (protected)
+- `DELETE /api/v1//users/:id` - Delete user (protected)

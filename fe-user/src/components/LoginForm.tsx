@@ -12,7 +12,7 @@ import * as authServices from "@/services/authServices";
 
 function LoginForm() {
   const { login } = useAuth();
-
+  
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{
@@ -31,7 +31,7 @@ function LoginForm() {
 
     // Call API login
     const res = await authServices.login(emailOrUsername, password);
-
+    
     if (res.errors) {
       setErrors(res.errors);
       console.log(res.errors);

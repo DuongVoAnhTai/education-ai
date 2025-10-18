@@ -1,9 +1,10 @@
 # Education-AI (monorepo)
 
-This repository contains two projects:
+This repository contains three projects:
 ----- Stand at root folder
-- `fe-administrator` — frontend (Nextjs) - npm dev:fe
-- `fe-user` — frontend (Nextjs) - npm dev:fe
+- `be` — backend (Nextjs) - npm dev:be
+- `fe-administrator` — frontend (Nextjs) - npm dev:fe-admin
+- `fe-user` — frontend (Nextjs) - npm dev:fe-user
 
 This repo is set up as a npm workspace. The preferred package manager is npm.
 
@@ -13,17 +14,25 @@ You can run the package scripts directly with npm:
 
 ```powershell
 # At root
+npm run dev:be
 npm run dev:fe-user
 npm run dev:fe-admin
 ```
 
 ```powershell
+# backend
+cd /be
+npm install
+npm run dev
+```
+
+```powershell
 # frontend
-cd ../fe-user
+cd /fe-user
 npm install
 npm run dev
 
-cd ../fe-administrator
+cd /fe-administrator
 npm install
 npm run dev
 ```

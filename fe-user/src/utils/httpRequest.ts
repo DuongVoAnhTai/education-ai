@@ -5,6 +5,7 @@ const httpRequest = axios.create({
     process.env.NEXT_PUBLIC_BASE_URL ||
     process.env.REACT_APP_BASE_URL ||
     "/api/",
+  withCredentials: true,
 });
 
 httpRequest.interceptors.request.use((config) => {
