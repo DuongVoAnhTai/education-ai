@@ -11,9 +11,3 @@ interface ValidationErrorLogin {
   emailOrUsername?: string;
   password?: string;
 }
-
-interface SearchUsersResponse {
-  success: boolean;
-  users?: User[];
-  error?: string;
-}
