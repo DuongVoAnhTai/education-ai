@@ -2,17 +2,16 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClose } from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 
 import "@/styles/styles.css";
 import { useAuth } from "@/hooks/useAuth";
 import * as authServices from "@/services/authServices";
+import { X } from "lucide-react";
 
 function LoginForm() {
   const { login } = useAuth();
-  
+
   const [emailOrUsername, setEmailOrUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<{
@@ -31,7 +30,7 @@ function LoginForm() {
 
     // Call API login
     const res = await authServices.login(emailOrUsername, password);
-    
+
     if (res.errors) {
       setErrors(res.errors);
       console.log(res.errors);
@@ -76,8 +75,8 @@ function LoginForm() {
           {errors.invalid && (
             <p className="mb-4 rounded-md bg-red-100 p-3 text-center text-sm text-red-700 relative">
               {errors.invalid}
-              <FontAwesomeIcon
-                icon={faClose}
+              <X
+                size={20}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-red-700 hover:text-red-500"
                 onClick={handleCloseError}
               />

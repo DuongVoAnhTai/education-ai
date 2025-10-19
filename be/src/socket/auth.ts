@@ -1,6 +1,9 @@
 import { Socket } from "socket.io";
+import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+
+dotenv.config({ path: ".env" });
 
 export const authenticateSocket = async (
   socket: Socket,
@@ -10,9 +13,11 @@ export const authenticateSocket = async (
   if (!token) {
     return next(new Error("Unauthorized: No token provided"));
   }
+  console.log("jwt", process.env.JWT_SECRET);
 
   try {
     const secret = process.env.JWT_SECRET;
+
     if (!secret) {
       throw new Error("JWT_SECRET is not defined");
     }

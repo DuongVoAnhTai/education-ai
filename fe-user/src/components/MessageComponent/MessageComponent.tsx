@@ -78,7 +78,7 @@ function MessagesComponent() {
       if (res.error) {
         if (res.existingConversationId) {
           alert(`Conversation already exists: ${res.existingConversationId}`);
-          window.location.href = `/messages/${res.existingConversationId}`;
+          window.location.href = `messages-socket/${res.existingConversationId}`;
         } else {
           setCreateError(res.error);
         }
@@ -91,7 +91,7 @@ function MessagesComponent() {
         setSearchedUsers([]);
         setIsGroupChat(false);
         setGroupTitle('');
-        window.location.href = `/messages/${res.conversation.id}`;
+        window.location.href = `messages-socket/${res.conversation.id}`;
       }
     } catch (err) {
       setCreateError('Failed to create conversation');
@@ -195,7 +195,7 @@ function MessagesComponent() {
             <li
               key={conv.id}
               className="bg-white shadow-md rounded-lg p-4 flex items-center space-x-4 cursor-pointer"
-              onClick={() => window.location.href = `/messages/${conv.id}`}
+              onClick={() => window.location.href = `messages-socket/${conv.id}`}
             >
               <Image
                 src={otherParticipant?.user.avatarUrl || 'https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg'}

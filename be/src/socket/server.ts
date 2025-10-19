@@ -3,7 +3,7 @@ import { Server } from "socket.io";
 import { authenticateSocket } from "./auth";
 import { setupEventHandlers } from "./events";
 
-const PORT = process.env.SOCKET_PORT || 4000;
+const PORT = process.env.NEXT_PUBLIC_SOCKET_PORT || 4000;
 
 const httpServer = createServer();
 const io = new Server(httpServer, {

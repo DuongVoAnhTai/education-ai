@@ -6,7 +6,8 @@
     "dev": "next dev -p 8080 --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "socket:dev": "tsx src/socket/server.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.17.1",
@@ -15,7 +16,9 @@
     "jsonwebtoken": "^9.0.2",
     "next": "15.5.5",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -24,9 +27,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/socket.io": "^3.0.1",
+    "@types/socket.io-client": "^1.4.36",
     "eslint": "^9",
     "eslint-config-next": "15.5.5",
     "prisma": "^6.17.1",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }

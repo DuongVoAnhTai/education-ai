@@ -7,6 +7,8 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
     const errors: ValidationErrorSignup = {};
+    const defaultAvatar =
+      "https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg";
 
     // Required fields validation
     if (!data.email) errors.email = "Email is required";
@@ -54,7 +56,7 @@ export async function POST(req: Request) {
     if (data.password.length < 8) {
       errors.password = "Password is too short";
     }
-    
+
     if (
       data.password &&
       data.confirmPassword &&
@@ -78,7 +80,7 @@ export async function POST(req: Request) {
         passwordHash: hashedPassword,
         fullName: fullName,
         role: data.role || "STUDENT",
-        avatarUrl: data.avatarUrl || null,
+        avatarUrl: data.avatarUrl || defaultAvatar,
       },
     });
 

@@ -23,7 +23,7 @@
     "start:fe-user": "npm --workspace fe-user run start",
     "start:be": "npm --workspace be run start",
 
-    "socket:fe-user": "npm --workspace fe-user run socket:dev",
+    "socket": "npm --workspace be run socket:dev",
 
     "dev": "npm run dev:be & npm run dev:fe-administrator & npm run dev:fe-user"
   },
