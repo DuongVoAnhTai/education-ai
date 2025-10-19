@@ -39,3 +39,16 @@ export const signup = async (
     return { error: "Sign up failed" };
   }
 };
+
+export const logout = async () => {
+  try {
+    await httpRequest.post("auth/logout");
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+    }
+    return { ok: true };
+  } catch (error) {
+    console.error("Logout failed:", error);
+    return { ok: false, error };
+  }
+};

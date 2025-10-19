@@ -1,21 +1,45 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import Image from "next/image";
 import { Bell, Menu, Search, X, Info } from "lucide-react";
+import * as userService from "@/services/userServices";
+import * as authService from "@/services/authServices";
 
 interface TopbarProps {
-  sidebarOpen: boolean
+  sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  currentUser?: User; // nhận user từ props nếu đã đăng nhập
 }
 
-const Topbar = ({ sidebarOpen, setSidebarOpen, currentUser }: TopbarProps) => {
+const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
-  const defaultAvatar =
-    "https://sevenpillarsinstitute.org/wp-content/uploads/2017/10/facebook-avatar-1.jpg";
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const router = useRouter();
+  const {
+    data: fetchedUser,
+    isLoading,
+  } = useSWR("currentUser", userService.getUser, {
+    revalidateIfStale: false,
+    revalidateOnFocus: false,
+    revalidateOnReconnect: false,
+  });
 
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      // đảm bảo token client bị xóa
+      if (typeof window !== "undefined") localStorage.removeItem("token");
+      setUserMenuOpen(false);
+      // chuyển về trang đăng nhập
+      router.push("/login");
+    }
+  };
   // Thông báo mẫu
   const [notifications, setNotifications] = useState<AppNotification[]>([
     {
@@ -33,15 +57,6 @@ const Topbar = ({ sidebarOpen, setSidebarOpen, currentUser }: TopbarProps) => {
       type: "success",
     },
   ]);
-
-  const user: User = currentUser ?? {
-    id: "1",
-    email: "student@example.com",
-    fullName: "Học viên",
-    username: "student01",
-    role: "student",
-    avatarUrl: null,
-  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -120,24 +135,41 @@ const Topbar = ({ sidebarOpen, setSidebarOpen, currentUser }: TopbarProps) => {
           </div>
 
           {/* User info */}
-          <div className="flex items-center space-x-2">
-            {user.avatarUrl ? (
-              <Image
-                src={user.avatarUrl || defaultAvatar}
-                alt="avatar"
-                width={32}
-                height={32}
-                className="rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" />
-            )}
+          <button
+            onClick={() => setUserMenuOpen((prev) => !prev)}
+            className="flex items-center space-x-2 relative cursor-pointer"
+          >
+            <Image
+              src={fetchedUser?.avatarUrl || "/default-avatar.png"}
+              alt="avatar"
+              width={32}
+              height={32}
+              className="rounded-full object-cover"
+            />
             <span className="text-sm font-medium text-gray-700">
-              {user.fullName ?? user.username ?? "Người dùng"}
+              {isLoading ? "Đang tải..." : fetchedUser?.fullName ?? "Người dùng"}
             </span>
-          </div>
+          </button>
         </div>
       </div>
+
+      {userMenuOpen && (
+        <div
+          className="fixed inset-0 z-10"
+          onClick={() => setUserMenuOpen(false)}
+        />
+      )}
+
+      {userMenuOpen && (
+        <div className="absolute right-3 top-20 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+          <button
+            onClick={handleLogout}
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            Đăng xuất
+          </button>
+        </div>
+      )}
     </header>
   );
 };
