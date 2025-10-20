@@ -17,6 +17,7 @@ You can run the package scripts directly with npm:
 npm run dev:be
 npm run dev:fe-user
 npm run dev:fe-admin
+npm run socket # server for socket
 ```
 
 ```powershell
@@ -35,4 +36,11 @@ npm run dev
 cd /fe-administrator
 npm install
 npm run dev
+```
+
+In backend contains socket server:
+```powershell
+# backend
+cd /be
+npm run socket:dev
 ```

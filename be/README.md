@@ -10,6 +10,7 @@
 ```bash
 npm install
 npm run dev
+npm run socket:dev # server for socket
 ```
 
 ## Key Routes

@@ -13,7 +13,6 @@ export const authenticateSocket = async (
   if (!token) {
     return next(new Error("Unauthorized: No token provided"));
   }
-  console.log("jwt", process.env.JWT_SECRET);
 
   try {
     const secret = process.env.JWT_SECRET;
