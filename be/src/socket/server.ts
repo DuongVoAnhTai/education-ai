@@ -68,7 +68,7 @@ httpServer.on("error", (error: NodeJS.ErrnoException) => {
 // Graceful shutdown
 process.on("SIGTERM", async () => {
   console.log("SIGTERM received. Closing server...");
-  await Promise.allSettled([pubClient.disconnect(), subClient.disconnect()]);
+  await Promise.allSettled([pubClient.quit(), subClient.quit()]);
   io.close(() => {
     console.log("Socket.IO server closed");
     httpServer.close(() => {

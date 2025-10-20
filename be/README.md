@@ -4,6 +4,7 @@
 
 1. Copy `.env.example` to `.env` and fill values.
 2. Provide `JWT_SECRET`
+3. Provide `REDIS_URL`
 
 ## Setup
 

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import Image from "next/image";
-import { Bell, Menu, Search, X, Info } from "lucide-react";
+import { Bell, Menu, Search, X, Info, UserIcon } from "lucide-react";
 import * as userService from "@/services/userServices";
 import * as authService from "@/services/authServices";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TopbarProps {
   sidebarOpen: boolean;
@@ -18,14 +19,18 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
-  const {
-    data: fetchedUser,
-    isLoading,
-  } = useSWR("currentUser", userService.getUser, {
-    revalidateIfStale: false,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-  });
+  const { logout: clientLogout } = useAuth();
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const { data: fetchedUser, isLoading } = useSWR(
+    token ? ["currentUser", token] : null,
+    () => userService.getUser(),
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
   const handleLogout = async () => {
     try {
@@ -33,11 +38,15 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      // đảm bảo token client bị xóa
-      if (typeof window !== "undefined") localStorage.removeItem("token");
+      // cập nhật client state bằng hook
+      try {
+        clientLogout();
+      } catch (e) {
+        console.warn("client logout failed", e);
+      }
       setUserMenuOpen(false);
-      // chuyển về trang đăng nhập
-      router.push("/login");
+      mutate("currentUser", null, { revalidate: false });
+      router.replace("/login");
     }
   };
   // Thông báo mẫu
@@ -139,15 +148,24 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
             onClick={() => setUserMenuOpen((prev) => !prev)}
             className="flex items-center space-x-2 relative cursor-pointer"
           >
-            <Image
-              src={fetchedUser?.avatarUrl || "/default-avatar.png"}
-              alt="avatar"
-              width={32}
-              height={32}
-              className="rounded-full object-cover"
-            />
+            {fetchedUser?.avatarUrl ? (
+              <Image
+                src={fetchedUser?.avatarUrl}
+                alt="avatar"
+                width={32}
+                height={32}
+                className="rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
+                <UserIcon size={15} />
+              </div>
+            )}
+
             <span className="text-sm font-medium text-gray-700">
-              {isLoading ? "Đang tải..." : fetchedUser?.fullName ?? "Người dùng"}
+              {isLoading
+                ? "Đang tải..."
+                : fetchedUser?.fullName ?? "Người dùng"}
             </span>
           </button>
         </div>
