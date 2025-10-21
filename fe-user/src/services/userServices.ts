@@ -14,6 +14,7 @@ export const getUser = async (): Promise<User | undefined> => {
 export const updateUser = async (updateData: {
   avatarUrl?: string;
   fullName?: string;
+  bio?: string;
 }): Promise<User | undefined> => {
   try {
     const res = await httpRequest.put("users/me", updateData);

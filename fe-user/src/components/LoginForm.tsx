@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import "@/styles/styles.css";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/context/AuthContext";
 import * as authServices from "@/services/authServices";
 import { X } from "lucide-react";
 

@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import useSWR, { mutate } from "swr";
 import Image from "next/image";
 import { Bell, Menu, Search, X, Info, UserIcon } from "lucide-react";
-import * as userService from "@/services/userServices";
+import { useAuth } from "@/context/AuthContext";
 import * as authService from "@/services/authServices";
-import { useAuth } from "@/hooks/useAuth";
 
 interface TopbarProps {
   sidebarOpen: boolean;
@@ -19,18 +17,11 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const router = useRouter();
-  const { logout: clientLogout } = useAuth();
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const { data: fetchedUser, isLoading } = useSWR(
-    token ? ["currentUser", token] : null,
-    () => userService.getUser(),
-    {
-      revalidateIfStale: false,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    }
-  );
+  const {
+    userDetail: fetchedUser,
+    loading: isLoading,
+    logout: clientLogout,
+  } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -45,7 +36,6 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
         console.warn("client logout failed", e);
       }
       setUserMenuOpen(false);
-      mutate("currentUser", null, { revalidate: false });
       router.replace("/login");
     }
   };
@@ -154,7 +144,7 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
                 alt="avatar"
                 width={32}
                 height={32}
-                className="rounded-full object-cover"
+                className="w-8 h-8 rounded-full object-cover"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
@@ -182,7 +172,7 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
         <div className="absolute right-3 top-20 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
           <button
             onClick={handleLogout}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
           >
             Đăng xuất
           </button>

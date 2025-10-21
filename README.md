@@ -20,6 +20,8 @@ npm run dev:fe-admin
 npm run socket # server for socket
 ```
 
+OR
+
 ```powershell
 # backend
 cd /be

@@ -10,7 +10,7 @@ export async function GET(req: Request) {
 
   const user = await prisma.users.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, role: true, fullName: true, avatarUrl: true },
+    select: { id: true, email: true, role: true, fullName: true, bio: true, avatarUrl: true },
   });
 
   return NextResponse.json({ user });
@@ -29,7 +29,7 @@ export async function PUT(req: Request) {
     const data = await req.json();
 
     // Validate update data
-    const allowedFields = ["fullName", "avatarUrl"];
+    const allowedFields = ["fullName", "avatarUrl", "bio"];
     const updateData: any = {};
 
     Object.keys(data).forEach((key) => {
@@ -55,6 +55,7 @@ export async function PUT(req: Request) {
         email: true,
         username: true,
         fullName: true,
+        bio: true,
         role: true,
         avatarUrl: true,
       },

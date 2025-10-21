@@ -5,6 +5,7 @@ interface User {
   username?: string;
   role: string;
   avatarUrl: string | null;
+  bio: string | null;
 }
 interface SearchUsersResponse {
   success: boolean;
