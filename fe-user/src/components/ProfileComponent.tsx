@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, UserIcon } from "lucide-react";
 import Image from "next/image";
+import { toast } from "react-toastify";
 import { useAuth } from "@/context/AuthContext";
 import * as userService from "@/services/userServices";
 import * as cloudinaryService from "@/services/cloudinaryServices";
@@ -33,26 +34,70 @@ const ProfileComponent = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    try {
-      let avatarUrl = user.avatarUrl ?? "";
+    // try {
+    //   let avatarUrl = user.avatarUrl ?? "";
 
-      //Nếu có file mới → upload Cloudinary
-      if (previewFile) {
-        avatarUrl = await cloudinaryService.uploadImage(previewFile);
+    //   //Nếu có file mới → upload Cloudinary
+    //   if (previewFile) {
+    //     avatarUrl = await cloudinaryService.uploadImage(previewFile);
+    //   }
+
+    //   await userService.updateUser({
+    //     fullName: user.fullName ?? "",
+    //     avatarUrl,
+    //     bio: user.bio ?? "",
+    //   });
+
+    //   await refreshUserDetail();
+    //   toast.success("Cập nhật thành công!", {
+    //     position: "top-right",
+    //     autoClose: 5000,
+    //     hideProgressBar: false,
+    //     closeOnClick: true,
+    //     pauseOnHover: true,
+    //     theme: "colored",
+    //   });
+    // } catch (err) {
+    //   console.error(err);
+    //   toast.error("Lưu thất bại!", {
+    //     position: "top-right",
+    //     autoClose: 5000,
+    //     hideProgressBar: false,
+    //     closeOnClick: true,
+    //     pauseOnHover: true,
+    //     theme: "colored",
+    //   });
+    // }
+    toast.promise(
+      (async () => {
+        let avatarUrl = user.avatarUrl ?? "";
+
+        if (previewFile) {
+          avatarUrl = await cloudinaryService.uploadImage(previewFile);
+        }
+
+        await userService.updateUser({
+          fullName: user.fullName ?? "",
+          avatarUrl,
+          bio: user.bio ?? "",
+        });
+
+        await refreshUserDetail();
+      })(),
+      {
+        pending: "Đang cập nhật...",
+        success: "Cập nhật thành công!",
+        error: "Lưu thất bại!",
+      },
+      {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        theme: "colored",
       }
-
-      await userService.updateUser({
-        fullName: user.fullName ?? "",
-        avatarUrl,
-        bio: user.bio ?? "",
-      });
-
-      await refreshUserDetail();
-      alert("Cập nhật thành công!");
-    } catch (err) {
-      console.error(err);
-      alert("Lưu thất bại!");
-    }
+    );
   };
 
   return (
@@ -137,7 +182,7 @@ const ProfileComponent = () => {
           </label>
 
           <label className="block md:col-span-2">
-            <span className="text-sm text-gray-700">Giới thiệu</span>
+            <span className="text-sm text-gray-700">Bio</span>
             <textarea
               value={user?.bio ?? ""}
               onChange={(e) =>
