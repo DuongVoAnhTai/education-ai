@@ -23,6 +23,16 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
     logout: clientLogout,
   } = useAuth();
 
+  const handleProfile = () => {
+    setUserMenuOpen(false);
+    router.replace("/profile");
+  };
+
+  const handleChangePassword = () => {
+    setUserMenuOpen(false);
+    router.replace("/change-password");
+  }
+
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -171,8 +181,24 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
       {userMenuOpen && (
         <div className="absolute right-3 top-20 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
           <button
+            onClick={handleProfile}
+            className="block w-full text-left px-4 py-1 my-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+          >
+            Hồ sơ
+          </button>
+
+          <button
+            onClick={handleChangePassword}
+            className="block w-full text-left px-4 py-1 my-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+          >
+            Đổi mật khẩu
+          </button>
+
+          <div className="h-0 my-2 overflow-hidden border-t border-gray-300" />
+
+          <button
             onClick={handleLogout}
-            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+            className="block w-full text-left px-4 py-1 my-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
           >
             Đăng xuất
           </button>

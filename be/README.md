@@ -18,8 +18,7 @@ npm run socket:dev # server for socket
 
 - `POST /api/v1/auth/login` — login, returns access + refresh tokens.
 - `POST /api/v1/auth/logout` — revokes the active refresh token.
-- `POST /api/v1/auth/password-reset/request` — requests a password reset email.
-- `POST /api/v1/auth/password-reset/confirm` — finalises reset and revokes outstanding sessions.
+- `POST /api/v1/auth/change-password` — requests a password reset email.
 
 ## User API
 

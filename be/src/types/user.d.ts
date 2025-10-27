@@ -11,3 +11,9 @@ interface ValidationErrorLogin {
   emailOrUsername?: string;
   password?: string;
 }
+
+interface ValidationErrorChangePassword {
+  currentPassword?: string;
+  newPassword?: string
+  confirmNewPassword?: string
+}

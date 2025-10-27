@@ -42,3 +42,19 @@ export const searchUsers = async (
     return undefined;
   }
 };
+
+export const changePassword = async (data: {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}) => {
+  try {
+    const res = await httpRequest.put("users/change-password", data);
+    return res;
+  } catch (error: any) {
+    if (error.response?.data?.errors) {
+      return { errors: error.response.data.errors };
+    }
+    return { error: "Change password failed" };
+  }
+};

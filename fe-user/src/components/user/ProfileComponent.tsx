@@ -34,40 +34,6 @@ const ProfileComponent = () => {
 
   const handleSave = async () => {
     if (!user) return;
-    // try {
-    //   let avatarUrl = user.avatarUrl ?? "";
-
-    //   //Nếu có file mới → upload Cloudinary
-    //   if (previewFile) {
-    //     avatarUrl = await cloudinaryService.uploadImage(previewFile);
-    //   }
-
-    //   await userService.updateUser({
-    //     fullName: user.fullName ?? "",
-    //     avatarUrl,
-    //     bio: user.bio ?? "",
-    //   });
-
-    //   await refreshUserDetail();
-    //   toast.success("Cập nhật thành công!", {
-    //     position: "top-right",
-    //     autoClose: 5000,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     theme: "colored",
-    //   });
-    // } catch (err) {
-    //   console.error(err);
-    //   toast.error("Lưu thất bại!", {
-    //     position: "top-right",
-    //     autoClose: 5000,
-    //     hideProgressBar: false,
-    //     closeOnClick: true,
-    //     pauseOnHover: true,
-    //     theme: "colored",
-    //   });
-    // }
     toast.promise(
       (async () => {
         let avatarUrl = user.avatarUrl ?? "";

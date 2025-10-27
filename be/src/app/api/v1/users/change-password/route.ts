@@ -12,22 +12,42 @@ export async function PUT(req: Request) {
     }
 
     // Get data from request body
-    const { currentPassword, newPassword } = await req.json();
+    const { currentPassword, newPassword, confirmNewPassword } =
+      await req.json();
+    const errors: ValidationErrorChangePassword = {};
 
     // Validate required fields
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: "Current password and new password are required" },
-        { status: 400 }
-      );
+    if (!currentPassword)
+      errors.currentPassword = "Current password is required";
+    if (!newPassword) errors.newPassword = "New password is required";
+    if (!confirmNewPassword)
+      errors.confirmNewPassword = "Confirm password is required";
+
+    // Password validations
+    // Check password strength (uppercase, lowercase, digit, special char)
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
+
+    if (newPassword && !passwordRegex.test(newPassword)) {
+      errors.newPassword =
+        "Password must include at least 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special symbol";
     }
 
-    // Validate new password strength
-    if (newPassword.length < 6) {
-      return NextResponse.json(
-        { error: "New password must be at least 6 characters long" },
-        { status: 400 }
-      );
+    if (newPassword && newPassword.length < 8) {
+      errors.newPassword = "Password is too short";
+    }
+
+    if (
+      newPassword &&
+      confirmNewPassword &&
+      newPassword !== confirmNewPassword
+    ) {
+      errors.confirmNewPassword = "Passwords do not match";
+    }
+
+    // If there are any validation errors, return them all
+    if (Object.keys(errors).length > 0) {
+      return NextResponse.json({ errors }, { status: 400 });
     }
 
     // Get user from database
@@ -47,7 +67,24 @@ export async function PUT(req: Request) {
 
     if (!isValidCurrentPassword) {
       return NextResponse.json(
-        { error: "Current password is incorrect" },
+        { errors: { currentPassword: "Current password is incorrect" } },
+        { status: 400 }
+      );
+    }
+
+    const isValidNewPassword = await bcrypt.compare(
+      newPassword,
+      user.passwordHash
+    );
+
+    if (isValidNewPassword) {
+      return NextResponse.json(
+        {
+          errors: {
+            newPassword:
+              "Your new password is the same as your previous password.",
+          },
+        },
         { status: 400 }
       );
     }

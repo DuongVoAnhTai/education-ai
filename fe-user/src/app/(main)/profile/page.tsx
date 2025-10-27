@@ -1,4 +1,4 @@
-import ProfileComponent from "@/components/ProfileComponent";
+import ProfileComponent from "@/components/user/ProfileComponent";
 
 function Skills() {
   return (
