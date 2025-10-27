@@ -8,6 +8,7 @@ import "@/styles/styles.css";
 import { useAuth } from "@/context/AuthContext";
 import * as authServices from "@/services/authServices";
 import { X } from "lucide-react";
+import { toast } from "react-toastify";
 
 function LoginForm() {
   const { login } = useAuth();
@@ -33,11 +34,17 @@ function LoginForm() {
 
     if (res.errors) {
       setErrors(res.errors);
-      console.log(res.errors);
+      toast.error("Đăng nhập thất bại.", {
+        theme: "colored",
+      });
 
       handleClear();
     } else {
       login(res.token);
+      toast.success("Đăng nhập thành công!", {
+        theme: "colored",
+        autoClose: 3000,
+      });
       router.push("/");
       handleClear();
     }

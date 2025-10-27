@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 import "@/styles/styles.css";
+import { toast } from "react-toastify";
 import * as authServices from "@/services/authServices";
 
 export default function SignUpForm() {
@@ -41,7 +42,13 @@ export default function SignUpForm() {
 
     if (res.errors) {
       setErrors(res.errors);
+      toast.error("Đăng ký thất bại.", {
+        theme: "colored",
+      });
     } else {
+      toast.success("Đăng ký thành công!", {
+        theme: "colored",
+      });
       // thành công → chuyển hướng login
       router.push("/login");
     }
