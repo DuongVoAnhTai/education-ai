@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // PUT: cập nhật answer key
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string; keyId: string } }
+  { params }: { params: Promise<{ id: string; keyId: string }> }
 ) {
   try {
     const { id, keyId } = await params;
@@ -35,7 +35,7 @@ export async function PUT(
 // DELETE: xóa answer key
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string; keyId: string } }
+  { params }: { params: Promise<{ id: string; keyId: string }> }
 ) {
   try {
     const { id, keyId } = await params;

@@ -6,9 +6,9 @@ import { checkVisibility } from "@/lib/checkVisibility";
 // GET /skills/:skillId/tags — lấy tags của skill
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = params;
+  const { id } = await params;
 
   try {
     const visibilityResult = await checkVisibility(req, id);
@@ -33,9 +33,9 @@ export async function GET(
 // POST /skills/:skillId/tags — gắn tag cho skill
 export async function POST(
   req: Request,
-  { params }: { params: { skillId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { skillId } = params;
+  const { id } = await params;
 
   try {
     const payload = verifyToken(req);
@@ -61,7 +61,7 @@ export async function POST(
     // tạo record trong SkillTags
     await prisma.skillTags.create({
       data: {
-        skillId,
+        skillId: id,
         tagId: tag.id,
       },
     });

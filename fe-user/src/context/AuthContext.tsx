@@ -55,10 +55,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
-      setUserPayload(jwtDecode(token));
-      fetchUser();
-    } else setLoading(false);
+    if (token && token.split(".").length === 3) {
+      try {
+        const decoded = jwtDecode<UserPayload>(token);
+        setUserPayload(decoded);
+        fetchUser();
+      } catch (err) {
+        console.error("Failed to decode token:", err);
+        localStorage.removeItem("token");
+        setLoading(false);
+      }
+    } else {
+      console.warn("No valid token found or token malformed");
+      setLoading(false);
+    }
   }, []);
 
   return (

@@ -18,6 +18,7 @@
 
     "build:fe-admin": "npm --workspace fe-administrator run build",
     "build:fe-user": "npm --workspace fe-user run build",
+    "build:be": "npm --workspace be run build",
 
     "start:fe-admin": "npm --workspace fe-administrator run start",
     "start:fe-user": "npm --workspace fe-user run start",

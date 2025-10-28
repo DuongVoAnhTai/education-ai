@@ -4,17 +4,18 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    
+
     const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { skillId, title, resourceType, url, content, ordering } = await req.json();
+    const { skillId, title, resourceType, url, content, ordering } =
+      await req.json();
 
     // Check resource có tồn tại không
     const existingResource = await prisma.learningResources.findUnique({
@@ -63,7 +64,7 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;

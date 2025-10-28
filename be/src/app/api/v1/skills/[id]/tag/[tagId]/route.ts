@@ -4,9 +4,9 @@ import { verifyToken } from "@/lib/auth";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string; tagId: string } }
+  { params }: { params: Promise<{ id: string; tagId: string }> }
 ) {
-  const { id, tagId } = params;
+  const { id, tagId } = await params;
 
   try {
     const payload = verifyToken(req);
@@ -23,6 +23,9 @@ export async function DELETE(
     return NextResponse.json({ message: "Tag removed" });
   } catch (error) {
     console.error("Remove tag error:", error);
-    return NextResponse.json({ error: "Failed to remove tag" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to remove tag" },
+      { status: 500 }
+    );
   }
 }

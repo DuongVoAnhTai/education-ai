@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 // PUT: cập nhật option
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string; optionId: string } }
+  { params }: { params: Promise<{ id: string; optionId: string }> }
 ) {
   try {
     const { id, optionId } = await params;
@@ -35,7 +35,7 @@ export async function PUT(
 // DELETE: xóa option
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string; optionId: string } }
+  { params }: { params: Promise<{ id: string; optionId: string }> }
 ) {
   try {
     const { id, optionId } = await params;

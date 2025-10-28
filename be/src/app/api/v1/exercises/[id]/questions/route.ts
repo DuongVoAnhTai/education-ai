@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
@@ -51,7 +51,10 @@ export async function POST(
 
     // Validate required fields
     if (!questionType || !prompt) {
-      return NextResponse.json({ error: "Question Type, prompt are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Question Type, prompt are required" },
+        { status: 400 }
+      );
     }
 
     // Tạo exercise mới
