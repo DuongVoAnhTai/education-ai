@@ -4,7 +4,7 @@ export const getSignature = async (): Promise<CloudinarySignature> => {
   try {
     // Bước 1: Lấy chữ ký từ API route
     const res = await httpRequest.get("cloudinary-signature");
-    
+
     return res;
   } catch (error) {
     console.error("Get signature error:", error);
@@ -37,7 +37,7 @@ export const uploadImage = async (file: File): Promise<string> => {
     const data: CloudinaryUploadResult = await response.json();
 
     if (!data.secure_url) {
-        // Upload thành công, lấy URL
+      // Upload thành công, lấy URL
       throw new Error(data.error?.message || "Upload failed");
     }
 

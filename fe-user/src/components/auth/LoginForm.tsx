@@ -2,8 +2,6 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-
 import "@/styles/styles.css";
 import { useAuth } from "@/context/AuthContext";
 import * as authServices from "@/services/authServices";
@@ -72,99 +70,67 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <div className="w-full max-w-sm rounded-lg bg-white p-8 shadow-md">
-        <h2 className="mb-6 text-center text-2xl font-bold bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
-          LogIn
-        </h2>
+    <form className="space-y-5" onSubmit={handleSubmit}>
+      {errors.invalid && (
+        <p className="mb-4 rounded-md bg-red-100 p-3 text-center text-sm text-red-700 relative">
+          {errors.invalid}
+          <X
+            size={20}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-red-700 hover:text-red-500"
+            onClick={handleCloseError}
+          />
+        </p>
+      )}
 
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          {errors.invalid && (
-            <p className="mb-4 rounded-md bg-red-100 p-3 text-center text-sm text-red-700 relative">
-              {errors.invalid}
-              <X
-                size={20}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer text-red-700 hover:text-red-500"
-                onClick={handleCloseError}
-              />
-            </p>
-          )}
-
-          {/* Email or Username */}
-          <div>
-            <div
-              className={`input-group ${errors.emailOrUsername ? "error" : ""}`}
-            >
-              <input
-                ref={inputRef}
-                type="text"
-                id="emailOrUsername"
-                value={emailOrUsername}
-                onChange={(e) =>
-                  handleChange("emailOrUsername", e.target.value)
-                }
-                placeholder=" "
-                className="input-field"
-              />
-              <label htmlFor="emailOrUsername" className="input-label">
-                Username or email address
-              </label>
-            </div>
-            {errors.emailOrUsername && (
-              <p className="mt-1 text-sm text-red-500">
-                {errors.emailOrUsername}
-              </p>
-            )}
-          </div>
-
-          {/* Password */}
-          <div>
-            <div className={`input-group ${errors.password ? "error" : ""}`}>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                placeholder=" "
-                className="input-field"
-              />
-              <label htmlFor="password" className="input-label">
-                Password
-              </label>
-            </div>
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Login button */}
-          <button
-            type="submit"
-            className="w-full rounded-md bg-gradient-to-r from-blue-500 to-purple-500 py-2 text-white hover:opacity-90 cursor-pointer"
-          >
-            LogIn
-          </button>
-        </form>
-
-        {/* Forgot password */}
-        <div className="mt-4 text-center">
-          <Link href="#" className="text-sm text-blue-600 hover:underline">
-            Forgot password?
-          </Link>
+      {/* Email or Username */}
+      <div>
+        <div className={`input-group ${errors.emailOrUsername ? "error" : ""}`}>
+          <input
+            ref={inputRef}
+            type="text"
+            id="emailOrUsername"
+            value={emailOrUsername}
+            onChange={(e) => handleChange("emailOrUsername", e.target.value)}
+            placeholder=" "
+            className="input-field"
+          />
+          <label htmlFor="emailOrUsername" className="input-label">
+            Username or email address
+          </label>
         </div>
-
-        {/* Signup */}
-        <div className="mt-4 text-center text-sm text-gray-600">
-          Don’t have an account?{" "}
-          <Link
-            href="/signup"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            Sign up
-          </Link>
-        </div>
+        {errors.emailOrUsername && (
+          <p className="mt-1 text-sm text-red-500">{errors.emailOrUsername}</p>
+        )}
       </div>
-    </div>
+
+      {/* Password */}
+      <div>
+        <div className={`input-group ${errors.password ? "error" : ""}`}>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => handleChange("password", e.target.value)}
+            placeholder=" "
+            className="input-field"
+          />
+          <label htmlFor="password" className="input-label">
+            Password
+          </label>
+        </div>
+        {errors.password && (
+          <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+        )}
+      </div>
+
+      {/* Login button */}
+      <button
+        type="submit"
+        className="w-full rounded-md bg-gradient-to-r from-blue-500 to-purple-500 py-2 text-white hover:opacity-90 cursor-pointer"
+      >
+        LogIn
+      </button>
+    </form>
   );
 }
 

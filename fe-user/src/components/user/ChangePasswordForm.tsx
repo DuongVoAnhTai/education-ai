@@ -72,8 +72,6 @@ export default function ChangePasswordForm() {
     }`;
 
   return (
-    <div className="max-w-md bg-white shadow-sm border border-gray-200 rounded-xl p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Đổi mật khẩu</h3>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -138,6 +136,5 @@ export default function ChangePasswordForm() {
           Lưu thay đổi
         </button>
       </form>
-    </div>
   );
 }

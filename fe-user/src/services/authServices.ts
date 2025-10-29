@@ -52,3 +52,34 @@ export const logout = async () => {
     return { ok: false, error };
   }
 };
+
+export const forgotPassword = async (email: string) => {
+  try {
+    const res = await httpRequest.post("auth/forgot-password", { email });
+    return res;
+  } catch (error: any) {
+    return { errors: error.response?.data?.errors || "Failed to send reset email" };
+  }
+};
+
+export const resetPassword = async (
+  token: string,
+  id: string,
+  password: string,
+  confirmPassword: string
+) => {
+  try {
+    const res = await httpRequest.post("auth/reset-password", {
+      token,
+      id,
+      password,
+      confirmPassword,
+    });
+    return res;
+  } catch (error: any) {
+    if (error.response?.data?.errors) {
+      return { errors: error.response.data.errors };
+    }
+    return { error: "Password reset failed" };
+  }
+};
