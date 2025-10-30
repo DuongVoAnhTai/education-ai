@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const { token, id, password, confirmPassword } = await req.json();
+    const { token, password, confirmPassword } = await req.json();
     const errors: { [key: string]: string } = {};
 
     if (!token) errors.token = "Token is required";
-    if (!id) errors.id = "User ID is required";
     if (!password) errors.password = "Password is required";
     if (!confirmPassword)
       errors.confirmPassword = "Confirm password is required";
@@ -35,42 +33,51 @@ export async function POST(req: Request) {
     }
 
     // Find valid reset token
-    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
-    const resetToken = await prisma.passwordReset.findFirst({
+    // Vì bcrypt tạo salt ngẫu nhiên, ta không thể tìm trực tiếp bằng hash.
+    // Ta phải tìm tất cả các token hợp lệ và so sánh.
+    const potentialTokens = await prisma.passwordReset.findMany({
       where: {
-        tokenHash,
-        userId: id,
-        expiresAt: { gt: new Date() },
         used: false,
+        expiresAt: {
+          gt: new Date(), // Lớn hơn thời gian hiện tại -> chưa hết hạn
+        },
       },
     });
 
-    if (!resetToken) {
+    let matchingTokenRecord = null;
+    for (const record of potentialTokens) {
+      const isTokenValid = await bcrypt.compare(token, record.tokenHash);
+      if (isTokenValid) {
+        matchingTokenRecord = record;
+        break;
+      }
+    }
+
+    if (!matchingTokenRecord) {
       return NextResponse.json(
-        { error: "Invalid or expired reset token" },
+        { errors: { token: "Token không hợp lệ hoặc đã hết hạn." } },
         { status: 400 }
       );
     }
 
-    // Update password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await prisma.$transaction([
-      prisma.users.update({
-        where: { id },
-        data: { passwordHash: hashedPassword },
-      }),
-      prisma.passwordReset.update({
-        where: { id: resetToken.id },
-        data: { used: true },
-      }),
-    ]);
+    // Hash mật khẩu mới
+    const newPasswordHash = await bcrypt.hash(password, 10);
 
-    // // Delete used token
-    // await prisma.passwordReset.delete({
-    //   where: { id: resetToken.id },
-    // });
+    await prisma.users.update({
+      where: { id: matchingTokenRecord.userId },
+      data: { passwordHash: newPasswordHash },
+    });
 
-    return NextResponse.json({ message: "Password reset successfully" });
+    // Vô hiệu hóa token sau khi sử dụng
+    await prisma.passwordReset.update({
+      where: { id: matchingTokenRecord.id },
+      data: { used: true },
+    });
+
+    return NextResponse.json(
+      { message: "Password reset successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Reset password error:", error);
     return NextResponse.json(

@@ -10,7 +10,6 @@ export default function ResetPasswordForm() {
   const searchParams = useSearchParams();
 
   const token = searchParams?.get("token") ?? "";
-  const id = searchParams?.get("id") ?? "";
 
   const [formData, setFormData] = useState({
     password: "",
@@ -26,7 +25,7 @@ export default function ResetPasswordForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!token || !id) {
+    if (!token) {
       setErrors((prev) => ({
         ...prev,
         token:
@@ -34,7 +33,7 @@ export default function ResetPasswordForm() {
       }));
       toast.error("Đặt lại mật khẩu thất bại.");
     }
-  }, [token, id]);
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -46,7 +45,7 @@ export default function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    if (!token || !id) {
+    if (!token) {
       toast.error("Đặt lại mật khẩu thất bại.");
       return;
     }
@@ -56,7 +55,6 @@ export default function ResetPasswordForm() {
     const promise = (async () => {
       const res = await authService.resetPassword(
         token,
-        id,
         formData.password,
         formData.confirmPassword
       );
@@ -80,9 +78,6 @@ export default function ResetPasswordForm() {
       .then(() => {
         // on success redirect to login
         router.replace("/login");
-      })
-      .catch(() => {
-        // keep user on page to fix errors
       })
       .finally(() => {
         setIsSubmitting(false);

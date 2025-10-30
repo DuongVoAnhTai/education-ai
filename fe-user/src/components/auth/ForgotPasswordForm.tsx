@@ -20,22 +20,24 @@ export default function ForgotPasswordForm() {
     setIsSubmitting(true);
     setErrors({});
 
-    try {
+    const promise = (async () => {
       const res = await authService.forgotPassword(email);
-
-      if (res.errors) {
+      if (res?.errors) {
         setErrors(res.errors);
-        toast.error("Gửi email thất bại");
-      } else {
-        toast.success("Gửi email thành công");
-        setEmail("");
-        setIsEmailSent(true);
+        throw new Error("validation");
       }
-    } catch (err) {
-      toast.error("Có lỗi xảy ra, vui lòng thử lại sau.");
-    } finally {
-      setIsSubmitting(false);
-    }
+      return res;
+    })();
+
+    toast
+      .promise(promise, {
+        pending: "Đang xử lí...",
+        success: "Đã gửi thành công!",
+        error: "Gửi thất bại!",
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const inputClass = (hasError?: string) =>

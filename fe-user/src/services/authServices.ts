@@ -64,14 +64,12 @@ export const forgotPassword = async (email: string) => {
 
 export const resetPassword = async (
   token: string,
-  id: string,
   password: string,
   confirmPassword: string
 ) => {
   try {
     const res = await httpRequest.post("auth/reset-password", {
       token,
-      id,
       password,
       confirmPassword,
     });
