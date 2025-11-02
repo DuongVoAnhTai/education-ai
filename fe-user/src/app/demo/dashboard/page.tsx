@@ -1,4 +1,4 @@
-import EducationAIDashboard from "@/components/DashboardComponent";
+import EducationAIDashboard from "@/components/demo/DashboardComponent";
 
 function LoginPage() {
   return <EducationAIDashboard />;

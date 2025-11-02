@@ -1,4 +1,4 @@
-import QuizComponent from "../../components/QuizComponent";
+import QuizComponent from "@/components/demo/QuizComponent";
 
 function LoginPage() {
   return <QuizComponent />;
