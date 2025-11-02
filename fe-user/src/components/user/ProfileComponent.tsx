@@ -85,8 +85,8 @@ const ProfileComponent = () => {
                 height={20}
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
-                <UserIcon />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
+                {user?.fullName?.charAt(0).toUpperCase() || "U"}
               </div>
             )}
             <button
@@ -135,7 +135,7 @@ const ProfileComponent = () => {
             />
           </label>
           <label className="block">
-            <span className="text-sm text-gray-700">Tên</span>
+            <span className="text-sm text-gray-700">Họ và tên</span>
             <input
               value={user?.fullName ?? ""}
               onChange={(e) =>

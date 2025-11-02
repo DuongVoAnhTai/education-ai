@@ -7,8 +7,8 @@ export async function POST(req: Request) {
   try {
     const data = await req.json();
     const errors: ValidationErrorSignup = {};
-    const defaultAvatar =
-      "https://scontent.fsgn2-7.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=b224c7&_nc_ohc=D3fOwr6x0ZcQ7kNvwG6Jots&_nc_oc=AdkyhXHO6221ZTvhfdh_letjFGRL4spAfUrKqHHL4UszMoxYiiWf399OFThX8oqRvn8&_nc_zt=24&_nc_ht=scontent.fsgn2-7.fna&oh=00_Afc4XBdFgdfdt66D70W2puH4mbBFP4FoFz8rOGXQwUTUOQ&oe=691E9EFA";
+    // const defaultAvatar =
+      // "https://scontent.fsgn2-7.fna.fbcdn.net/v/t1.30497-1/453178253_471506465671661_2781666950760530985_n.png?stp=cp0_dst-png_s40x40&_nc_cat=1&ccb=1-7&_nc_sid=b224c7&_nc_ohc=D3fOwr6x0ZcQ7kNvwG6Jots&_nc_oc=AdkyhXHO6221ZTvhfdh_letjFGRL4spAfUrKqHHL4UszMoxYiiWf399OFThX8oqRvn8&_nc_zt=24&_nc_ht=scontent.fsgn2-7.fna&oh=00_Afc4XBdFgdfdt66D70W2puH4mbBFP4FoFz8rOGXQwUTUOQ&oe=691E9EFA";
 
     // Required fields validation
     if (!data.email) errors.email = "Email is required";
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         passwordHash: hashedPassword,
         fullName: fullName,
         role: data.role || "STUDENT",
-        avatarUrl: data.avatarUrl || defaultAvatar,
+        avatarUrl: data.avatarUrl || /* defaultAvatar */ null,
       },
     });
 

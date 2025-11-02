@@ -31,7 +31,7 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   const handleChangePassword = () => {
     setUserMenuOpen(false);
     router.replace("/change-password");
-  }
+  };
 
   const handleLogout = async () => {
     try {
@@ -157,8 +157,13 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
                 className="w-8 h-8 rounded-full object-cover"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
-                <UserIcon size={15} />
+              // <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white">
+              //   <UserIcon size={15} />
+              // </div>
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">
+                  {fetchedUser?.fullName?.charAt(0).toUpperCase() || "U"}
+                </span>
               </div>
             )}
 

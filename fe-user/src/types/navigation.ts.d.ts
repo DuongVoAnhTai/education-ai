@@ -1,4 +1,4 @@
-type TabId = "dashboard" | "skills" | "chat" | "results" | "profile";
+type TabId = "dashboard" | "skills" | "quiz" | "chat" | "results" | "profile";
 
 interface NavItem {
   id: TabId;
