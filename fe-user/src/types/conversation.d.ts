@@ -23,3 +23,17 @@ interface Conversation {
   messages: Message[]; // Thường chỉ có last message từ API
   updatedAt: Date;
 }
+
+interface SidebarConversation {
+  id: string;
+  name: string;
+  avatar?: string; // Sẽ không dùng trực tiếp, nhưng giữ lại cho tương lai
+  lastMessage: string;
+  timestamp: string;
+  isOnline?: boolean;
+  type: "direct" | "group" | "ai";
+  participantsCount?: number;
+  role?: "teacher" | "student"; // Lấy từ user role
+};
+
+type ChatFilter = "all" | "ai" | "direct" | "group";

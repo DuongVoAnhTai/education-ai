@@ -12,7 +12,7 @@ interface TopbarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
-const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
+const MainTopbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   const [searchValue, setSearchValue] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -213,4 +213,4 @@ const Topbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
   );
 };
 
-export default Topbar;
+export default MainTopbar;

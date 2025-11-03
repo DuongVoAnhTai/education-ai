@@ -52,28 +52,3 @@ export const getMessages = async (conversationId: string) => {
     return { error: "Failed to fetch messages" };
   }
 };
-
-// export const sendMessage = async (
-//   conversationId: string,
-//   content: string,
-//   contentType: string = "TEXT",
-//   senderType: string = "USER"
-// ) => {
-//   try {
-//     const res = await httpRequest.post(
-//       `conversations/${conversationId}/message`,
-//       {
-//         content,
-//         contentType,
-//         senderType,
-//       }
-//     );
-
-//     return res; // { success: true, message: {...} }
-//   } catch (error: any) {
-//     if (error.response?.data?.error) {
-//       return { error: error.response.data.error };
-//     }
-//     return { error: "Failed to send message" };
-//   }
-// };

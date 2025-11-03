@@ -26,7 +26,7 @@ const navItems: NavItem[] = [
   { id: "profile", label: "Hồ sơ", icon: UserIcon, path: "/profile" },
 ];
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+const MainSidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const pathname = usePathname();
 
   return (
@@ -88,4 +88,4 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   );
 };
 
-export default Sidebar;
+export default MainSidebar;

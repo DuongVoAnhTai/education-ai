@@ -72,69 +72,64 @@ export default function ChangePasswordForm() {
     }`;
 
   return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className={labelClass(errors.currentPassword)}>
+          Mật khẩu hiện tại*
+        </label>
+        <input
+          type="password"
+          name="currentPassword"
+          value={formData.currentPassword}
+          onChange={handleChange}
+          className={inputClass(errors.currentPassword)}
+          aria-invalid={!!errors.currentPassword}
+        />
+        {errors.currentPassword && (
+          <p className="text-sm text-red-500 mt-1">{errors.currentPassword}</p>
+        )}
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className={labelClass(errors.currentPassword)}>
-            Mật khẩu hiện tại*
-          </label>
-          <input
-            type="password"
-            name="currentPassword"
-            value={formData.currentPassword}
-            onChange={handleChange}
-            className={inputClass(errors.currentPassword)}
-            aria-invalid={!!errors.currentPassword}
-          />
-          {errors.currentPassword && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.currentPassword}
-            </p>
-          )}
-        </div>
+      <div>
+        <label className={labelClass(errors.newPassword)}>Mật khẩu mới*</label>
+        <input
+          type="password"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleChange}
+          className={inputClass(errors.newPassword)}
+          aria-invalid={!!errors.newPassword}
+        />
+        {errors.newPassword && (
+          <p className="text-sm text-red-500 mt-1">{errors.newPassword}</p>
+        )}
+      </div>
 
-        <div>
-          <label className={labelClass(errors.newPassword)}>
-            Mật khẩu mới*
-          </label>
-          <input
-            type="password"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleChange}
-            className={inputClass(errors.newPassword)}
-            aria-invalid={!!errors.newPassword}
-          />
-          {errors.newPassword && (
-            <p className="text-sm text-red-500 mt-1">{errors.newPassword}</p>
-          )}
-        </div>
+      <div>
+        <label className={labelClass(errors.confirmNewPassword)}>
+          Xác nhận mật khẩu mới*
+        </label>
+        <input
+          type="password"
+          name="confirmNewPassword"
+          value={formData.confirmNewPassword}
+          onChange={handleChange}
+          className={inputClass(errors.confirmNewPassword)}
+          aria-invalid={!!errors.confirmNewPassword}
+        />
+        {errors.confirmNewPassword && (
+          <p className="text-sm text-red-500 mt-1">
+            {errors.confirmNewPassword}
+          </p>
+        )}
+      </div>
 
-        <div>
-          <label className={labelClass(errors.confirmNewPassword)}>
-            Xác nhận mật khẩu mới*
-          </label>
-          <input
-            type="password"
-            name="confirmNewPassword"
-            value={formData.confirmNewPassword}
-            onChange={handleChange}
-            className={inputClass(errors.confirmNewPassword)}
-            aria-invalid={!!errors.confirmNewPassword}
-          />
-          {errors.confirmNewPassword && (
-            <p className="text-sm text-red-500 mt-1">
-              {errors.confirmNewPassword}
-            </p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Lưu thay đổi
-        </button>
-      </form>
+      <button
+        type="submit"
+        className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+      >
+        Lưu thay đổi
+      </button>
+    </form>
   );
 }
