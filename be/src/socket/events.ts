@@ -3,6 +3,7 @@ import { handleJoinRoom } from "./handlers/joinRoom";
 import { handleSendMessage } from "./handlers/sendMessage";
 import { handleLeaveRoom } from "./handlers/leaveRoom";
 import { handleTyping } from "./handlers/typing";
+import { handleGetOnlineUsers } from "./handlers/handlePresence";
 
 export const setupEventHandlers = (socket: Socket, io: Server) => {
   socket.on("join-room", (data, ack) => handleJoinRoom(socket, data, ack));
@@ -13,4 +14,5 @@ export const setupEventHandlers = (socket: Socket, io: Server) => {
     handleLeaveRoom(socket, data);
   });
   socket.on("typing", (data) => handleTyping(socket, io, data));
+  socket.on("get-online-users", () => handleGetOnlineUsers(socket));
 };

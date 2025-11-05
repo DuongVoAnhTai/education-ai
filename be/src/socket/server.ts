@@ -4,6 +4,7 @@ import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { authenticateSocket } from "./auth";
 import { setupEventHandlers } from "./events";
+import { handleUserConnect } from "./handlers/handlePresence";
 
 let pubClient: ReturnType<typeof createClient>;
 let subClient: ReturnType<typeof createClient>;
@@ -42,6 +43,7 @@ io.use(authenticateSocket);
 // Setup event handlers khi kết nối thành công
 io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
+  handleUserConnect(socket, io);
   setupEventHandlers(socket, io); // Truyền socket và io để handle events
 
   socket.on("disconnect", () => {

@@ -78,22 +78,12 @@ export const handleSendMessage = async (
     // Broadcast đến room
     io.to(conversationId).emit("new-message", message);
 
+    // Gửi ack cho người dùng ngay, không cần chờ AI
+    ack({ success: true, message });
+
     // Xử lý AI response
     if (conversation.allowAi) {
-      const aiMessage = await prisma.messages.create({
-        data: {
-          conversationId,
-          senderType: "AI",
-          content: `AI response to: ${content}`,
-          contentType: "TEXT",
-        },
-        include: {
-          sender: {
-            select: { id: true, username: true, avatarUrl: true },
-          },
-        },
-      });
-      io.to(conversationId).emit("new-message", aiMessage);
+      processAiResponse(conversationId, content, io);
     }
 
     ack({ success: true, message });
@@ -102,3 +92,42 @@ export const handleSendMessage = async (
     ack({ error: `Failed to send message: ${error.message}` });
   }
 };
+
+async function processAiResponse(
+  conversationId: string,
+  userContent: string,
+  io: Server
+) {
+  try {
+    // 1. Gọi đến dịch vụ AI của bạn (ví dụ: OpenAI, Gemini)
+    const aiContent = await getAiReply(userContent); // Đây là hàm giả định
+
+    // 2. Tạo tin nhắn AI trong CSDL
+    const aiMessage = await prisma.messages.create({
+      data: {
+        conversationId,
+        senderType: "AI",
+        content: `AI response to: ${userContent}`,
+        contentType: "TEXT",
+      },
+      include: {
+        sender: {
+          select: { id: true, username: true, avatarUrl: true },
+        },
+      },
+    });
+
+    // 3. Gửi tin nhắn AI đến client
+    io.to(conversationId).emit("new-message", aiMessage);
+  } catch (error) {
+    console.error("AI processing error:", error);
+    // Có thể gửi một tin nhắn lỗi về cho client
+    io.to(conversationId).emit("ai-error", {
+      message: "AI is currently unavailable",
+    });
+  }
+}
+
+function getAiReply(userContent: string) {
+  console.log(userContent);
+}

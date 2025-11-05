@@ -95,7 +95,7 @@ const MessageTopbar = ({ activeConversationId }: MessageTopbarProps) => {
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="w-10 h-10 bg-gray-500 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-bold">
                   {name.charAt(0).toUpperCase()}
                 </span>
@@ -103,7 +103,7 @@ const MessageTopbar = ({ activeConversationId }: MessageTopbarProps) => {
             )
           ) : (
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center bg-blue-500`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500`}
             >
               <Icon.User size={20} className="text-white" />
             </div>
