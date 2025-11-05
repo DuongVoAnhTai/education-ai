@@ -1,131 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import * as conversationService from "@/services/conversationServices";
+import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
+import * as conversationService from "@/services/conversationServices";
+import * as Icon from "@/assets/Image";
 
-// type ChatFilter = "all" | "ai" | "direct" | "group";
-// interface Conversation {
-//   id: string;
-//   name: string;
-//   avatar?: string;
-//   lastMessage: string;
-//   timestamp: string;
-//   isOnline?: boolean;
-//   isAI?: boolean;
-//   type: "direct" | "group" | "ai";
-//   participants?: number;
-//   role?: "teacher" | "student";
-// }
+interface MessageSidebarProps {
+  setShowNewChatModal: (show: boolean) => void;
+}
 
-// interface ChatMessage {
-//   id: string;
-//   conversationId: string;
-//   senderUserId: string | null;
-//   senderType: "USER" | "AI" | "SYSTEM";
-//   content: string | null;
-//   contentType: "TEXT" | "HTML" | "JSON" | "COMMAND";
-//   createdAt: string;
-//   isDeleted?: boolean;
-// }
-
-// interface Message extends ChatMessage {
-//   senderName: string;
-//   senderAvatar?: string;
-//   isAI?: boolean;
-//   isMe?: boolean;
-//   type: "text" | "image" | "code" | "file";
-//   status?: "sending" | "sent" | "delivered" | "read";
-//   codeLanguage?: string;
-//   fileUrl?: string;
-//   fileName?: string;
-// }
-
-// const defaultConversations = (): Conversation[] => [
-//   {
-//     id: "ai-1",
-//     name: "AI Tutor - Next.js",
-//     lastMessage: "Bạn có câu hỏi gì về Server Components không?",
-//     timestamp: new Date().toISOString(),
-//     isOnline: true,
-//     isAI: true,
-//     type: "ai",
-//   },
-// ];
-
-// const defaultMessages = (): Message[] => [
-//   {
-//     id: "1",
-//     conversationId: "ai-1",
-//     senderUserId: "ai",
-//     senderType: "AI",
-//     content:
-//       "Chào bạn! Tôi là AI Tutor chuyên về Next.js. Tôi có thể giúp gì cho bạn hôm nay?",
-//     contentType: "TEXT",
-//     createdAt: new Date(Date.now() - 3600000).toISOString(),
-//     senderName: "AI Tutor",
-//     isAI: true,
-//     isMe: false,
-//     type: "text",
-//     status: "read",
-//   },
-// ];
-
-// const saveData = (key: string, data: any) => {
-//   try {
-//     if (typeof window === "undefined") return;
-//     const fullKey = `${STORAGE_PREFIX}:${key}`;
-//     const json = JSON.stringify(data);
-//     localStorage.setItem(fullKey, json);
-//   } catch (e) {
-//     console.error("Save error:", e);
-//   }
-// };
-
-// const STORAGE_PREFIX = "msg";
-
-const IconBase = ({ size = 20, className = "", children }: any) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-  >
-    {children}
-  </svg>
-);
-
-// const loadData = (key: string, fallback: any = null) => {
-//   try {
-//     if (typeof window === "undefined") return fallback;
-//     const fullKey = `${STORAGE_PREFIX}:${key}`;
-//     const stored = localStorage.getItem(fullKey);
-//     if (stored) {
-//       return JSON.parse(stored);
-//     }
-//     return fallback;
-//   } catch (e) {
-//     console.error("Load error:", e);
-//     return fallback;
-//   }
-// };
-
-const MessageSidebar = () => {
+const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
   const [apiConversations, setApiConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userDetail: fetchedUser } = useAuth();
 
   const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [search, setSearch] = useState("");
   const [activeConversation, setActiveConversation] = useState<string | null>(
     null
   );
+  const { userDetail: fetchedUser } = useAuth();
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -149,97 +44,34 @@ const MessageSidebar = () => {
     fetchConversations();
   }, []);
 
-  const sidebarConversations = useMemo((): SidebarConversation[] => {
-    return apiConversations.map((conv) => {
-      const lastMessage = conv.messages[0];
-      let name = conv.title || "Nhóm chat";
-      let type: "direct" | "group" | "ai" = "group";
+  const getConversationType = (conv: Conversation): ChatFilter => {
+    if (conv.allowAi) return "ai";
+    if (conv.isGroup) return "group";
+    return "direct";
+  };
 
-      if (conv.allowAi) {
-        type = "ai";
-        name = conv.title || "AI Chat";
-      } else if (!conv.isGroup) {
-        type = "direct";
-        // Tìm người tham gia không phải là người dùng hiện tại
-        const otherParticipant = conv.participants.find(
-          (p) => p.userId !== fetchedUser?.id
-        );
-        name =
-          otherParticipant?.user.fullName ||
-          otherParticipant?.user.username ||
-          "Người lạ";
-      }
+  const getConversationName = (
+    conv: Conversation,
+    currentUserId?: string
+  ): string => {
+    const type = getConversationType(conv);
+    if (type === "ai") {
+      return conv.title || "AI Tutor";
+    }
+    if (type === "group") {
+      return conv.title || "Cuộc trò chuyện nhóm";
+    }
+    // Nếu là chat 1-1, tìm tên của người còn lại
+    const otherParticipant = conv.participants.find(
+      (p) => p.user.id !== currentUserId
+    );
+    return otherParticipant?.user.fullName || "Người dùng không xác định";
+  };
 
-      return {
-        id: conv.id,
-        name: name,
-        lastMessage: lastMessage?.content || "Chưa có tin nhắn nào",
-        timestamp: lastMessage?.createdAt || conv.updatedAt.toString(),
-        type: type,
-        participantsCount: conv.participants.length,
-        // isOnline, role sẽ cần thêm logic sau
-      };
-    });
-  }, [apiConversations]);
-
-  const Search = (p: any) => (
-    <IconBase {...p}>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </IconBase>
-  );
-  const Plus = (p: any) => (
-    <IconBase {...p}>
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </IconBase>
-  );
-  const X = (p: any) => (
-    <IconBase {...p}>
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </IconBase>
-  );
-  const Bot = (p: any) => (
-    <IconBase {...p}>
-      <rect x="3" y="11" width="18" height="10" rx="2" />
-      <circle cx="12" cy="5" r="2" />
-      <path d="M12 7v4" />
-    </IconBase>
-  );
-  const Users = (p: any) => (
-    <IconBase {...p}>
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </IconBase>
-  );
-  const User = (p: any) => (
-    <IconBase {...p}>
-      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </IconBase>
-  );
-
-  const filteredConversations = useMemo(() => {
-    return sidebarConversations
-      .filter((c) => (chatFilter === "all" ? true : c.type === chatFilter))
-      .filter((c) =>
-        search.trim()
-          ? c.name.toLowerCase().includes(search.trim().toLowerCase())
-          : true
-      )
-      .sort(
-        (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-  }, [sidebarConversations, chatFilter, search]);
-
-  const getConversationIcon = (conv: SidebarConversation) => {
-    if (conv.type === "ai") return Bot;
-    if (conv.type === "group") return Users;
-    return User;
+  const getConversationIcon = (type: ChatFilter) => {
+    if (type === "ai") return Icon.Bot;
+    if (type === "group") return Icon.Users;
+    return Icon.User;
   };
 
   const formatTimestamp = (dateStr: string) => {
@@ -256,12 +88,26 @@ const MessageSidebar = () => {
     return date.toLocaleDateString("vi-VN");
   };
 
-  const getAvatarGradient = (conv: SidebarConversation) => {
-    if (conv.type === "ai") return "from-blue-500 to-purple-500";
-    if (conv.type === "group") return "from-green-500 to-teal-500";
-    if (conv.role === "teacher") return "from-orange-500 to-red-500";
+  const getAvatarGradient = (type: ChatFilter, role?: string) => {
+    if (type === "ai") return "from-blue-500 to-purple-500";
+    if (type === "group") return "from-green-500 to-teal-500";
+    if (role === "teacher") return "from-orange-500 to-red-500";
     return "from-gray-500 to-gray-600";
   };
+
+  const filteredConversations = useMemo(() => {
+    return apiConversations
+      .filter((conv) => {
+        const type = getConversationType(conv);
+        return chatFilter === "all" ? true : type === chatFilter;
+      })
+      .filter((conv) => {
+        if (!search.trim()) return true;
+        const name = getConversationName(conv, fetchedUser?.id);
+        return name.toLowerCase().includes(search.trim().toLowerCase());
+      });
+    // Việc sort đã được thực hiện ở API (orderBy: updatedAt), không cần sort lại ở client
+  }, [apiConversations, chatFilter, search, fetchedUser]);
 
   if (loading) {
     return (
@@ -287,15 +133,15 @@ const MessageSidebar = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xl font-bold text-gray-900">Messages</h2>
             <button
-              // onClick={() => setShowNewChatModal(true)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              onClick={() => setShowNewChatModal(true)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
             >
-              <Plus size={20} className="text-gray-600" />
+              <Icon.Plus size={20} className="text-gray-600" />
             </button>
           </div>
 
           <div className="relative mb-3">
-            <Search
+            <Icon.Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               size={18}
             />
@@ -332,63 +178,110 @@ const MessageSidebar = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto chat-list-scroll-y-auto scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
-          {filteredConversations.map((conv) => {
-            const Icon = getConversationIcon(conv);
-            return (
-              <div
-                key={conv.id}
-                onClick={() => setActiveConversation(conv.id)}
-                className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  activeConversation === conv.id
-                    ? "bg-blue-50 border-l-4 border-blue-500"
-                    : ""
-                }`}
-              >
-                <div className="relative">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-r ${getAvatarGradient(
-                      conv
-                    )}`}
-                  >
-                    <Icon size={20} className="text-white" />
-                  </div>
-                  {conv.isOnline && conv.type !== "group" && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                  )}
-                </div>
+          {filteredConversations.length === 0 ? (
+            <p className="p-4 text-center text-gray-500">
+              Không tìm thấy cuộc trò chuyện nào.
+            </p>
+          ) : (
+            filteredConversations.map((conv) => {
+              // Lấy các giá trị đã được tính toán để render
+              const type = getConversationType(conv);
+              const name = getConversationName(conv, fetchedUser?.id);
+              const lastMessage = conv.messages[0];
+              const timestamp =
+                lastMessage?.createdAt || conv.updatedAt.toString();
+              const Icon = getConversationIcon(type);
 
-                <div className="flex-1 ml-3 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {conv.name}
-                      </h3>
-                      {conv.role === "teacher" && (
-                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-                          Teacher
-                        </span>
-                      )}
+              let otherParticipant = null;
+              if (type === "direct") {
+                otherParticipant = conv.participants.find(
+                  (p) => p.user.id !== fetchedUser?.id
+                );
+              }
+
+              const otherUserRole = conv.participants.find(
+                (p) => p.user.id !== fetchedUser?.id
+              )?.user.role;
+
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => setActiveConversation(conv.id)}
+                  className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
+                    activeConversation === conv.id
+                      ? "bg-blue-50 border-l-4 border-blue-500"
+                      : ""
+                  }`}
+                >
+                  <div className="relative">
+                    {/* Điều kiện 1: Nếu là chat 1-1 và tìm thấy người còn lại */}
+                    {type === "direct" && otherParticipant ? (
+                      otherParticipant.user.avatarUrl ? (
+                        // Nếu người đó có avatarUrl
+                        <Image
+                          src={otherParticipant.user.avatarUrl}
+                          alt={otherParticipant.user.fullName || "Avatar"}
+                          width={44}
+                          height={44}
+                          className="w-11 h-11 rounded-full object-cover"
+                        />
+                      ) : (
+                        // Nếu người đó không có avatarUrl, hiển thị chữ cái đầu
+                        <div className="w-11 h-11 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-lg font-bold">
+                            {otherParticipant.user.fullName
+                              ?.charAt(0)
+                              .toUpperCase() || "U"}
+                          </span>
+                        </div>
+                      )
+                    ) : (
+                      /* Điều kiện 2: Fallback cho chat Nhóm hoặc AI */
+                      <div
+                        className={`w-11 h-11 rounded-full flex items-center justify-center bg-gradient-to-r ${getAvatarGradient(
+                          type
+                        )}`}
+                      >
+                        <Icon size={20} className="text-white" />
+                      </div>
+                    )}
+
+                    {/* Logic hiển thị trạng thái online có thể thêm vào đây */}
+                  </div>
+
+                  <div className="flex-1 ml-3 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {name}
+                        </h3>
+                        {otherUserRole === "ADMIN" && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
+                            Teacher
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600 truncate flex-1">
-                      {conv.lastMessage}
-                    </p>
-                    <span className="text-xs text-gray-500">
-                      {formatTimestamp(conv.timestamp)}
-                    </span>
-                  </div>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-600 truncate flex-1">
+                        {lastMessage?.content || "Bắt đầu cuộc trò chuyện"}
+                      </p>
+                      <span className="text-xs text-gray-500">
+                        {formatTimestamp(timestamp)}
+                      </span>
+                    </div>
 
-                  {conv.type === "group" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {conv.participantsCount} thành viên
-                    </p>
-                  )}
+                    {type === "group" && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {conv.participants.length} thành viên
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </div>
     </div>
