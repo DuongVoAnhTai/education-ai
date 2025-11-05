@@ -10,6 +10,10 @@ function MessageLayout({ children }: { children: React.ReactNode }) {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [activeConversationId, setActiveConversationId] = useState<
+    string | null
+  >(null);
+
   const handleConversationCreated = () => {
     // Khi hàm này được gọi, nó thay đổi state, khiến Sidebar re-render và fetch lại
     setRefreshKey((prevKey) => prevKey + 1);
@@ -23,13 +27,15 @@ function MessageLayout({ children }: { children: React.ReactNode }) {
           <MessageSidebar
             key={refreshKey}
             setShowNewChatModal={setShowNewChatModal}
+            activeConversationId={activeConversationId}
+            setActiveConversationId={setActiveConversationId}
           />
         </div>
       </div>
 
       {/* Content area */}
       <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 min-h-screen">
-        <MessageTopbar />
+        <MessageTopbar activeConversationId={activeConversationId} />
 
         {/* Content */}
         <main className="p-6">{children}</main>

@@ -12,6 +12,18 @@ export const getConversations = async () => {
   }
 };
 
+export const getConversationById = async (conversationId: string) => {
+  try {
+    const res = await httpRequest.get(`conversations/${conversationId}`);
+    return res; // { success: true, conversation: {...} }
+  } catch (error: any) {
+    if (error.response?.data?.error) {
+      return { error: error.response.data.error };
+    }
+    return { error: "Failed to fetch conversation details" };
+  }
+};
+
 export const createConversation = async (
   title?: string,
   participantIds: string[] = [],

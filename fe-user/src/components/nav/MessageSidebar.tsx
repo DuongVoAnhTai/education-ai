@@ -5,21 +5,25 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import * as conversationService from "@/services/conversationServices";
 import * as Icon from "@/assets/Image";
+import * as messageHelper from "@/utils/messageHelper";
 
 interface MessageSidebarProps {
   setShowNewChatModal: (show: boolean) => void;
+  activeConversationId: string | null;
+  setActiveConversationId: (id: string | null) => void;
 }
 
-const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
+const MessageSidebar = ({
+  setShowNewChatModal,
+  activeConversationId,
+  setActiveConversationId,
+}: MessageSidebarProps) => {
   const [apiConversations, setApiConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [search, setSearch] = useState("");
-  const [activeConversation, setActiveConversation] = useState<string | null>(
-    null
-  );
   const { userDetail: fetchedUser } = useAuth();
 
   useEffect(() => {
@@ -34,8 +38,8 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
       } else if (result.conversations) {
         setApiConversations(result.conversations);
         // Set conversation đầu tiên làm active nếu chưa có
-        if (!activeConversation && result.conversations.length > 0) {
-          setActiveConversation(result.conversations[0].id);
+        if (!activeConversationId && result.conversations.length > 0) {
+          setActiveConversationId(result.conversations[0].id);
         }
       }
       setLoading(false);
@@ -44,66 +48,15 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
     fetchConversations();
   }, []);
 
-  const getConversationType = (conv: Conversation): ChatFilter => {
-    if (conv.allowAi) return "ai";
-    if (conv.isGroup) return "group";
-    return "direct";
-  };
-
-  const getConversationName = (
-    conv: Conversation,
-    currentUserId?: string
-  ): string => {
-    const type = getConversationType(conv);
-    if (type === "ai") {
-      return conv.title || "AI Tutor";
-    }
-    if (type === "group") {
-      return conv.title || "Cuộc trò chuyện nhóm";
-    }
-    // Nếu là chat 1-1, tìm tên của người còn lại
-    const otherParticipant = conv.participants.find(
-      (p) => p.user.id !== currentUserId
-    );
-    return otherParticipant?.user.fullName || "Người dùng không xác định";
-  };
-
-  const getConversationIcon = (type: ChatFilter) => {
-    if (type === "ai") return Icon.Bot;
-    if (type === "group") return Icon.Users;
-    return Icon.User;
-  };
-
-  const formatTimestamp = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-    if (minutes < 1) return "Vừa xong";
-    if (minutes < 60) return `${minutes} phút`;
-    if (hours < 24) return `${hours} giờ`;
-    if (days < 7) return `${days} ngày`;
-    return date.toLocaleDateString("vi-VN");
-  };
-
-  const getAvatarGradient = (type: ChatFilter, role?: string) => {
-    if (type === "ai") return "from-blue-500 to-purple-500";
-    if (type === "group") return "from-green-500 to-teal-500";
-    if (role === "teacher") return "from-orange-500 to-red-500";
-    return "from-gray-500 to-gray-600";
-  };
-
   const filteredConversations = useMemo(() => {
     return apiConversations
       .filter((conv) => {
-        const type = getConversationType(conv);
+        const type = messageHelper.getConversationType(conv);
         return chatFilter === "all" ? true : type === chatFilter;
       })
       .filter((conv) => {
         if (!search.trim()) return true;
-        const name = getConversationName(conv, fetchedUser?.id);
+        const name = messageHelper.getConversationName(conv, fetchedUser?.id);
         return name.toLowerCase().includes(search.trim().toLowerCase());
       });
     // Việc sort đã được thực hiện ở API (orderBy: updatedAt), không cần sort lại ở client
@@ -184,12 +137,15 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
         ) : (
           filteredConversations.map((conv) => {
             // Lấy các giá trị đã được tính toán để render
-            const type = getConversationType(conv);
-            const name = getConversationName(conv, fetchedUser?.id);
+            const type = messageHelper.getConversationType(conv);
+            const name = messageHelper.getConversationName(
+              conv,
+              fetchedUser?.id
+            );
             const lastMessage = conv.messages[0];
             const timestamp =
               lastMessage?.createdAt || conv.updatedAt.toString();
-            const Icon = getConversationIcon(type);
+            const Icon = messageHelper.getConversationIcon(type);
 
             let otherParticipant = null;
             if (type === "direct") {
@@ -205,9 +161,9 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
             return (
               <div
                 key={conv.id}
-                onClick={() => setActiveConversation(conv.id)}
+                onClick={() => setActiveConversationId(conv.id)}
                 className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  activeConversation === conv.id
+                  activeConversationId === conv.id
                     ? "bg-blue-50 border-l-4 border-blue-500"
                     : ""
                 }`}
@@ -237,7 +193,7 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
                   ) : (
                     /* Điều kiện 2: Fallback cho chat Nhóm hoặc AI */
                     <div
-                      className={`w-11 h-11 rounded-full flex items-center justify-center bg-gradient-to-r ${getAvatarGradient(
+                      className={`w-11 h-11 rounded-full flex items-center justify-center bg-gradient-to-r ${messageHelper.getAvatarGradient(
                         type
                       )}`}
                     >
@@ -267,7 +223,7 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
                       {lastMessage?.content || "Bắt đầu cuộc trò chuyện"}
                     </p>
                     <span className="text-xs text-gray-500">
-                      {formatTimestamp(timestamp)}
+                      {messageHelper.formatTimestamp(timestamp)}
                     </span>
                   </div>
 
