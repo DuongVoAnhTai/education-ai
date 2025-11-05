@@ -1,4 +1,4 @@
-# Education-AI (monorepo)
+# LMS (monorepo)
 
 This repository contains three projects:
 ----- Stand at root folder
