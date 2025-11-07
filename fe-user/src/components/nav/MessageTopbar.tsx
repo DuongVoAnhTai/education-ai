@@ -1,21 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
+import { usePresence } from "@/context/PresenceContext";
 import * as Icon from "@/assets/Image";
 import * as conversationService from "@/services/conversationServices";
 import * as messageHelper from "@/utils/messageHelper";
 
-interface MessageTopbarProps {
-  activeConversationId: string | null;
-}
+const MessageTopbar = () => {
+  const params = useParams();
+  const activeConversationId = params.id as string;
 
-const MessageTopbar = ({ activeConversationId }: MessageTopbarProps) => {
   const [activeConversation, setActiveConversation] =
     useState<Conversation | null>(null);
   const [loading, setLoading] = useState(true);
   const { userDetail: fetchedUser } = useAuth();
+  const { isUserOnline } = usePresence();
 
   useEffect(() => {
     // Nếu không có conversation nào được chọn, reset state
@@ -73,12 +75,18 @@ const MessageTopbar = ({ activeConversationId }: MessageTopbarProps) => {
     activeConversation,
     fetchedUser?.id
   );
+  const IconAvatar = messageHelper.getConversationIcon(type);
+
   const otherParticipant =
     type === "direct"
       ? activeConversation.participants.find(
           (p) => p.user.id !== fetchedUser?.id
         )
       : null;
+
+  const isOnline = otherParticipant
+    ? isUserOnline(otherParticipant.user.id)
+    : false;
 
   return (
     <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
@@ -95,28 +103,38 @@ const MessageTopbar = ({ activeConversationId }: MessageTopbarProps) => {
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
+              // Nếu người đó không có avatarUrl, hiển thị chữ cái đầu
               <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">
-                  {name.charAt(0).toUpperCase()}
+                <span className="text-white text-lg font-bold">
+                  {otherParticipant.user.fullName?.charAt(0).toUpperCase() ||
+                    "U"}
                 </span>
               </div>
             )
           ) : (
+            /* Điều kiện 2: Fallback cho chat Nhóm hoặc AI */
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500`}
+              className={`w-11 h-11 rounded-full flex items-center justify-center bg-gradient-to-r ${messageHelper.getAvatarGradient(
+                type
+              )}`}
             >
-              <Icon.User size={20} className="text-white" />
+              <IconAvatar size={20} className="text-white" />
             </div>
           )}
         </div>
 
         <div className="ml-3">
           <h3 className="font-semibold text-gray-900">{name}</h3>
-          <p className="text-sm text-gray-500">
+          <p
+            className={`text-sm ${
+              isOnline ? "text-green-600" : "text-gray-500"
+            }`}
+          >
             {type === "group"
               ? `${activeConversation.participants.length} thành viên`
-              : // Logic isOnline sẽ cần cập nhật sau với WebSocket/Pusher
-                "Đang hoạt động"}
+              : isOnline
+              ? "Đang hoạt động"
+              : "Ngoại tuyến"}
           </p>
         </div>
       </div>

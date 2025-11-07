@@ -27,8 +27,8 @@ export const getConversationById = async (conversationId: string) => {
 export const createConversation = async (
   title?: string,
   participantIds: string[] = [],
-  isGroup: boolean = false,
-  allowAi: boolean = false
+  isGroup = false,
+  allowAi = false
 ) => {
   try {
     const res = await httpRequest.post("conversations", {

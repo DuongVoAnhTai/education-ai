@@ -10,7 +10,7 @@ interface Message {
   content: string;
   contentType: string;
   senderType: string;
-  sender: { id: string; username: string; avatarUrl: string };
+  sender: { id: string; username: string; fullName: string; avatarUrl: string };
   createdAt: string;
 }
 

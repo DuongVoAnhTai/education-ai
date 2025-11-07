@@ -43,6 +43,7 @@ export async function GET(
           select: {
             id: true,
             username: true,
+            fullName: true,
             avatarUrl: true,
             role: true,
           },

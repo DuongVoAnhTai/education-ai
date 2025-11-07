@@ -1,23 +1,19 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
+import { usePresence } from "@/context/PresenceContext";
 import * as conversationService from "@/services/conversationServices";
 import * as Icon from "@/assets/Image";
 import * as messageHelper from "@/utils/messageHelper";
 
 interface MessageSidebarProps {
   setShowNewChatModal: (show: boolean) => void;
-  activeConversationId: string | null;
-  setActiveConversationId: (id: string | null) => void;
 }
 
-const MessageSidebar = ({
-  setShowNewChatModal,
-  activeConversationId,
-  setActiveConversationId,
-}: MessageSidebarProps) => {
+const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
   const [apiConversations, setApiConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +21,11 @@ const MessageSidebar = ({
   const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [search, setSearch] = useState("");
   const { userDetail: fetchedUser } = useAuth();
+
+  const router = useRouter();
+  const params = useParams();
+  const activeConversationId = params.id as string;
+  const { isUserOnline } = usePresence();
 
   useEffect(() => {
     const fetchConversations = async () => {
@@ -39,7 +40,7 @@ const MessageSidebar = ({
         setApiConversations(result.conversations);
         // Set conversation đầu tiên làm active nếu chưa có
         if (!activeConversationId && result.conversations.length > 0) {
-          setActiveConversationId(result.conversations[0].id);
+          router.push(`/messages/${result.conversations[0].id}`);
         }
       }
       setLoading(false);
@@ -47,6 +48,13 @@ const MessageSidebar = ({
 
     fetchConversations();
   }, []);
+
+  const handleConversationClick = (conversationId: string) => {
+    // Chỉ điều hướng nếu click vào conversation khác
+    if (conversationId !== activeConversationId) {
+      router.push(`/messages/${conversationId}`);
+    }
+  };
 
   const filteredConversations = useMemo(() => {
     return apiConversations
@@ -158,10 +166,14 @@ const MessageSidebar = ({
               (p) => p.user.id !== fetchedUser?.id
             )?.user.role;
 
+            const isOnline = otherParticipant
+              ? isUserOnline(otherParticipant.user.id)
+              : false;
+
             return (
               <div
                 key={conv.id}
-                onClick={() => setActiveConversationId(conv.id)}
+                onClick={() => handleConversationClick(conv.id)}
                 className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
                   activeConversationId === conv.id
                     ? "bg-blue-50 border-l-4 border-blue-500"
@@ -202,6 +214,9 @@ const MessageSidebar = ({
                   )}
 
                   {/* Logic hiển thị trạng thái online có thể thêm vào đây */}
+                  {isOnline && (
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
+                  )}
                 </div>
 
                 <div className="flex-1 ml-3 min-w-0">

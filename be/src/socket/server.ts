@@ -4,7 +4,10 @@ import { createClient } from "redis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import { authenticateSocket } from "./auth";
 import { setupEventHandlers } from "./events";
-import { handleUserConnect } from "./handlers/handlePresence";
+import {
+  handleUserConnect,
+  handleUserDisconnect,
+} from "./handlers/handlePresence";
 
 let pubClient: ReturnType<typeof createClient>;
 let subClient: ReturnType<typeof createClient>;
@@ -48,6 +51,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log(`User disconnected: ${socket.id}`);
+    handleUserDisconnect(socket, io);
   });
 });
 

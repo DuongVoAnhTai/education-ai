@@ -6,13 +6,17 @@ import MessageTopbar from "@/components/nav/MessageTopbar";
 import NewChatModal from "@/components/message/NewChatModal";
 import { X } from "lucide-react";
 
-function MessageLayout({ children }: { children: React.ReactNode }) {
+interface MessageLayoutProps {
+  embedded?: boolean;
+  className?: string;
+}
+
+function MessageLayout({
+  children,
+  className = "",
+}: { children: React.ReactNode } & MessageLayoutProps) {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-
-  const [activeConversationId, setActiveConversationId] = useState<
-    string | null
-  >(null);
 
   const handleConversationCreated = () => {
     // Khi hàm này được gọi, nó thay đổi state, khiến Sidebar re-render và fetch lại
@@ -20,25 +24,23 @@ function MessageLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex">
-      <div className="h-screen bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col">
+    // <div className="h-screen bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col">
+      <div className={`h-full flex ${className}`}>
         <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
           {/* Sidebar */}
           <MessageSidebar
             key={refreshKey}
             setShowNewChatModal={setShowNewChatModal}
-            activeConversationId={activeConversationId}
-            setActiveConversationId={setActiveConversationId}
           />
         </div>
-      </div>
 
-      {/* Content area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 min-h-screen">
-        <MessageTopbar activeConversationId={activeConversationId} />
+        {/* Content area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <MessageTopbar />
 
-        {/* Content */}
-        <main className="p-6">{children}</main>
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto">{children}</div>
+        </div>
 
         {/* New Chat Modal */}
         {showNewChatModal && (
@@ -64,7 +66,6 @@ function MessageLayout({ children }: { children: React.ReactNode }) {
           </div>
         )}
       </div>
-    </div>
   );
 }
 

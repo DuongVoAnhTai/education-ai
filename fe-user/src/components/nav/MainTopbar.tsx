@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Bell, Menu, Search, X, Info, UserIcon } from "lucide-react";
+import { Bell, Menu, Search, X, Info } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import * as authService from "@/services/authServices";
 
