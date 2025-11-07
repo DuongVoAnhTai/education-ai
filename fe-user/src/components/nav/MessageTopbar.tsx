@@ -126,9 +126,8 @@ const MessageTopbar = () => {
         <div className="ml-3">
           <h3 className="font-semibold text-gray-900">{name}</h3>
           <p
-            className={`text-sm ${
-              isOnline ? "text-green-600" : "text-gray-500"
-            }`}
+            className="text-sm text-gray-500
+            "
           >
             {type === "group"
               ? `${activeConversation.participants.length} thành viên`

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Camera, UserIcon } from "lucide-react";
+import { Camera } from "lucide-react";
 import Image from "next/image";
 import { toast } from "react-toastify";
 import { useAuth } from "@/context/AuthContext";
@@ -12,18 +12,33 @@ const ProfileComponent = () => {
   const { userDetail, refreshUserDetail } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const pickAvatar = () => fileRef.current?.click();
 
   useEffect(() => {
-    if (userDetail) setUser(userDetail);
+    if (userDetail) {
+      setUser(userDetail);
+      setPreviewFile(null);
+    }
   }, [userDetail]);
 
   const onAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Client-side validation for avatar
+    if (!file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn một tệp hình ảnh.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      // Giới hạn 5MB cho avatar
+      toast.error("Ảnh đại diện phải nhỏ hơn 5MB.");
+      return;
+    }
 
     // Hiển thị preview tạm
     const previewUrl = URL.createObjectURL(file);
@@ -39,7 +54,12 @@ const ProfileComponent = () => {
         let avatarUrl = user.avatarUrl ?? "";
 
         if (previewFile) {
-          avatarUrl = await cloudinaryService.uploadImage(previewFile);
+          const uploadResult = await cloudinaryService.uploadFile(
+            previewFile,
+            "avatars"
+          );
+
+          avatarUrl = uploadResult.secure_url;
         }
 
         await userService.updateUser({

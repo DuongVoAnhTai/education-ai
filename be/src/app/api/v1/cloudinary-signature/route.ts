@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import cloudinary from "@/config/cloudinary";
 
-export async function GET(req: Request) {
+export async function POST(req: Request) {
   try {
     // Xác thực user
     const payload = verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const { folder = "attachments", tags = "" } = await req.json();
 
     // Tạo timestamp
     const timestamp = Math.round(new Date().getTime() / 1000);
@@ -17,7 +19,8 @@ export async function GET(req: Request) {
     const signature = cloudinary.utils.api_sign_request(
       {
         timestamp,
-        folder: "avatars", // Optional: folder lưu ảnh trên Cloudinary
+        folder, // Optional: folder lưu trên Cloudinary
+        tags,   // Optional: thẻ tag cho file
       },
       process.env.CLOUDINARY_API_SECRET!
     );

@@ -59,6 +59,8 @@ enum ContentType {
   HTML
   JSON
   COMMAND
+  IMAGE
+  FILE
 }
 
 // ------------------------------
@@ -245,6 +247,9 @@ model Messages {
   senderType     SenderType  @map("sender_type")
   content        String?
   contentType    ContentType @default(TEXT) @map("content_type")
+  fileUrl        String?     @map("file_url")
+  fileName       String?     @map("file_name")
+  fileSize       Int?        @map("file_size")
   createdAt      DateTime    @default(now()) @map("created_at")
 
   conversation Conversations @relation(fields: [conversationId], references: [id])

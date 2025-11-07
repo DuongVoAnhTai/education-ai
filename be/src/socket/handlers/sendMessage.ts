@@ -1,13 +1,23 @@
 import { prisma } from "@/lib/prisma";
 import { Server, Socket } from "socket.io";
 
+type ContentType = "TEXT" | "IMAGE" | "IMAGE" | "FILE";
+
 export const handleSendMessage = async (
   socket: Socket,
   io: Server,
-  data: { conversationId: string; content: string },
+  data: {
+    conversationId: string;
+    content: string;
+    contentType?: ContentType;
+    fileUrl?: string;
+    fileName?: string;
+    fileSize?: number;
+  },
   ack: (response: any) => void
 ) => {
-  const { conversationId, content } = data;
+  const { conversationId, content, contentType, fileUrl, fileName, fileSize } =
+    data;
   const userId = socket.data.user.userId;
 
   try {
@@ -60,7 +70,10 @@ export const handleSendMessage = async (
         senderUserId: userId,
         senderType: "USER",
         content: content.trim(),
-        contentType: "TEXT",
+        contentType: data.contentType || "TEXT",
+        fileUrl: data.fileUrl,
+        fileName: data.fileName,
+        fileSize: data.fileSize,
       },
       include: {
         sender: {
@@ -83,7 +96,15 @@ export const handleSendMessage = async (
 
     // Xử lý AI response
     if (conversation.allowAi) {
-      processAiResponse(conversationId, content, io);
+      processAiResponse(
+        conversationId,
+        content,
+        io,
+        contentType,
+        fileUrl,
+        fileName,
+        fileSize
+      );
     }
 
     ack({ success: true, message });
@@ -96,7 +117,11 @@ export const handleSendMessage = async (
 async function processAiResponse(
   conversationId: string,
   userContent: string,
-  io: Server
+  io: Server,
+  contentType?: ContentType,
+  fileUrl?: string,
+  fileName?: string,
+  fileSize?: number
 ) {
   try {
     // 1. Gọi đến dịch vụ AI của bạn (ví dụ: OpenAI, Gemini)
@@ -108,7 +133,10 @@ async function processAiResponse(
         conversationId,
         senderType: "AI",
         content: `AI response to: ${userContent}`,
-        contentType: "TEXT",
+        contentType: contentType || "TEXT",
+        fileUrl: fileUrl,
+        fileName: fileName,
+        fileSize: fileSize,
       },
       include: {
         sender: {

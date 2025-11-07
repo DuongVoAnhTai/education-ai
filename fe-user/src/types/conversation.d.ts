@@ -12,6 +12,9 @@ interface Message {
   senderType: string;
   sender: { id: string; username: string; fullName: string; avatarUrl: string };
   createdAt: string;
+  fileUrl?: string;
+  fileName?: string;
+  fileSize: number;
 }
 
 interface Conversation {
