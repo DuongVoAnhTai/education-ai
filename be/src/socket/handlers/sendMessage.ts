@@ -13,11 +13,19 @@ export const handleSendMessage = async (
     fileUrl?: string;
     fileName?: string;
     fileSize?: number;
+    fileFormat?: string;
   },
   ack: (response: any) => void
 ) => {
-  const { conversationId, content, contentType, fileUrl, fileName, fileSize } =
-    data;
+  const {
+    conversationId,
+    content,
+    contentType,
+    fileUrl,
+    fileName,
+    fileSize,
+    fileFormat,
+  } = data;
   const userId = socket.data.user.userId;
 
   try {
@@ -74,6 +82,7 @@ export const handleSendMessage = async (
         fileUrl: data.fileUrl,
         fileName: data.fileName,
         fileSize: data.fileSize,
+        fileFormat: data.fileFormat,
       },
       include: {
         sender: {
@@ -103,7 +112,8 @@ export const handleSendMessage = async (
         contentType,
         fileUrl,
         fileName,
-        fileSize
+        fileSize,
+        fileFormat
       );
     }
 
@@ -121,7 +131,8 @@ async function processAiResponse(
   contentType?: ContentType,
   fileUrl?: string,
   fileName?: string,
-  fileSize?: number
+  fileSize?: number,
+  fileFormat?: string
 ) {
   try {
     // 1. Gọi đến dịch vụ AI của bạn (ví dụ: OpenAI, Gemini)
@@ -137,6 +148,7 @@ async function processAiResponse(
         fileUrl: fileUrl,
         fileName: fileName,
         fileSize: fileSize,
+        fileFormat: fileFormat,
       },
       include: {
         sender: {

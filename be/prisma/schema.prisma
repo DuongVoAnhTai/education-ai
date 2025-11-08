@@ -250,6 +250,7 @@ model Messages {
   fileUrl        String?     @map("file_url")
   fileName       String?     @map("file_name")
   fileSize       Int?        @map("file_size")
+  fileFormat     String?     @map("file_format")
   createdAt      DateTime    @default(now()) @map("created_at")
 
   conversation Conversations @relation(fields: [conversationId], references: [id])

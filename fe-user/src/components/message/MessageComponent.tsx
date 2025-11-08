@@ -1,16 +1,16 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 
 import { useSocket } from "@/context/SocketContext";
 import { useAuth } from "@/context/AuthContext";
-import * as Icon from "@/assets/Image";
 import * as conversationService from "@/services/conversationServices";
 import * as cloudinaryService from "@/services/cloudinaryServices";
-import * as MessageHelper from "@/utils/messageHelper";
+import MessageInput from "./MessageInput";
+import MessageTyping from "./MessageTyping";
+import MessageRender from "./MessageRender";
 
 interface MessageComponentProps {
   conversationId: string;
@@ -149,8 +149,9 @@ function MessageComponent({ conversationId }: MessageComponentProps) {
               ? textToSend
               : `Tệp đính kèm: ${uploadResult.original_filename}`,
           fileUrl: uploadResult.secure_url,
-          fileName: uploadResult.original_filename,
+          fileName: fileToSend?.name,
           fileSize: uploadResult.bytes,
+          fileFormat: uploadResult.format,
         };
         socket.emit("send-message", filePayload, (ack: any) => {
           if (ack.error) toast.error(`Lỗi gửi tệp: ${ack.error}`);
@@ -224,210 +225,26 @@ function MessageComponent({ conversationId }: MessageComponentProps) {
             </div>
           )}
 
-          {messages.map((msg) => {
-            const isMe = msg.sender?.id === fetchedUser?.id;
-
-            const renderMessageContent = () => {
-              switch (msg.contentType) {
-                // --- Case 1: IMAGE ---
-                case "IMAGE":
-                  return (
-                    <a
-                      href={msg.fileUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <div className="rounded-lg overflow-hidden shadow-lg max-w-xs sm:max-w-sm cursor-pointer border border-gray-200">
-                        <Image
-                          src={msg.fileUrl!}
-                          alt={msg.fileName || "image"}
-                          width={300} // Cung cấp width/height để Next.js tối ưu hóa
-                          height={300}
-                          className="object-cover w-full h-auto"
-                        />
-                      </div>
-                    </a>
-                  );
-
-                // --- Case 2: FILE ---
-                case "FILE":
-                  return (
-                    <a
-                      href={msg.fileUrl!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download={msg.fileName}
-                      className={`bg-white border border-gray-200 rounded-lg p-3 flex items-center space-x-3 shadow-sm hover:bg-gray-50 max-w-xs ${
-                        isMe ? "" : "text-gray-900"
-                      }`}
-                    >
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Icon.Paperclip size={20} className="text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {msg.fileName}
-                        </p>
-                        {msg.fileSize && (
-                          <p className="text-xs text-gray-500">
-                            {MessageHelper.formatFileSize(msg.fileSize)}
-                          </p>
-                        )}
-                      </div>
-                    </a>
-                  );
-
-                // --- Case 3 (Mặc định): TEXT ---
-                default:
-                  return (
-                    <div
-                      className={`px-4 py-3 rounded-2xl shadow-sm ${
-                        isMe
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-gray-900"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap break-words">
-                        {msg.content}
-                      </p>
-                    </div>
-                  );
-              }
-            };
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`flex items-end max-w-2xl ${
-                    isMe ? "flex-row-reverse" : "flex-row"
-                  }`}
-                >
-                  {!isMe &&
-                    (msg.sender?.avatarUrl ? (
-                      <Image
-                        src={msg.sender?.avatarUrl}
-                        alt={msg.sender?.username || "U"}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full mr-2"
-                      />
-                    ) : (
-                      // Nếu người đó không có avatarUrl, hiển thị chữ cái đầu
-                      <div className="w-8 h-8 mr-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-lg font-bold">
-                          {msg.sender?.fullName?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    ))}
-
-                  <div className="group relative">
-                    {!isMe && (
-                      <p className="text-xs text-gray-500 mb-1 ml-2">
-                        {msg.sender?.username}
-                      </p>
-                    )}
-
-                    {/* Gọi hàm render để hiển thị đúng loại nội dung */}
-                    {renderMessageContent()}
-
-                    {/* có thể thêm phần hiển thị thời gian, status, nút xóa ở đây */}
-
-                    <div
-                      className={`flex items-center mt-1 space-x-1 text-xs text-gray-500 ${
-                        isMe ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <span>
-                        {MessageHelper.formatTimestamp(msg.createdAt)}
-                      </span>
-                      {/* {isMe && <MessageStatus status={msg.status} />} */}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          <MessageRender messages={messages} fetchedUser={fetchedUser} />
         </div>
 
-        {/* Hiển thị ai đó đang gõ phím */}
-        <div className="mt-auto flex-shrink-0">
-          {typingUsers.length > 0 && (
-            <div className="flex items-end">
-              <div className="text-sm text-blue-500 italic">
-                {typingUsers.map((u) => u.username).join(", ")} đang soạn tin...
-              </div>
-            </div>
-          )}
-        </div>
+        <MessageTyping typingUsers={typingUsers} />
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Phần input tin nhắn */}
-      <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0">
-        {stagedFile && (
-          <div className="mb-2 p-2 bg-gray-100 border border-gray-200 rounded-lg flex items-center justify-between animate-in fade-in-50 pr-1 py-1 max-w-xs">
-            <div className="flex items-center space-x-2 min-w-0">
-              <div className="w-8 h-8 bg-gray-200 rounded-md flex items-center justify-center flex-shrink-0">
-                <Icon.Paperclip size={16} className="text-gray-600" />
-              </div>
-              <span className="text-sm text-gray-800 truncate">
-                {stagedFile.name}
-              </span>
-            </div>
-            <button
-              onClick={handleRemoveStagedFile}
-              className="p-1 hover:bg-gray-300 rounded-full flex-shrink-0"
-              title="Bỏ chọn tệp"
-            >
-              <Icon.X size={14} className="text-gray-700" />
-            </button>
-          </div>
-        )}
-
-        <div className="flex items-end space-x-2">
-          {/* ... Các nút đính kèm file ... */}
-          <button
-            onClick={openFilePicker}
-            disabled={isSending}
-            className="w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer"
-          >
-            <Icon.Paperclip size={20} />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            onChange={handlePickFile}
-          />
-
-          <div className="flex-1 relative">
-            <textarea
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Nhập tin nhắn..."
-              rows={1}
-              className="w-full px-4 py-3 border border-gray-300 rounded-2xl resize-none"
-              style={{ minHeight: "44px", maxHeight: "120px" }}
-            />
-          </div>
-          <button
-            onClick={handleSendMessage}
-            disabled={(!messageInput.trim() && !stagedFile) || isSending}
-            className="p-3 bg-blue-600 text-white rounded-full disabled:opacity-50 flex items-center justify-center w-[48px] h-[48px]"
-          >
-            {isSending ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <Icon.Send size={20} />
-            )}
-          </button>
-        </div>
-      </div>
+      <MessageInput
+        stagedFile={stagedFile}
+        isSending={isSending}
+        messageInput={messageInput}
+        setMessageInput={setMessageInput}
+        fileInputRef={fileInputRef}
+        openFilePicker={openFilePicker}
+        handlePickFile={handlePickFile}
+        handleRemoveStagedFile={handleRemoveStagedFile}
+        handleKeyPress={handleKeyPress}
+        handleSendMessage={handleSendMessage}
+      />
     </div>
   );
 }

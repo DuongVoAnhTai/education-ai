@@ -15,6 +15,7 @@ interface Message {
   fileUrl?: string;
   fileName?: string;
   fileSize: number;
+  fileFormat?: string;
 }
 
 interface Conversation {
