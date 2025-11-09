@@ -1,9 +1,7 @@
+import SkillComponent from "@/components/skill/SkillComponent";
+
 function Skills() {
-  return (
-    <div className="text-gray-700 text-lg">
-      Skill page
-    </div>
-  );
+  return <SkillComponent />;
 }
 
 export default Skills;
