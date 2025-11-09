@@ -51,19 +51,18 @@ export async function POST(
       );
     }
 
-    // tạo tag nếu chưa có
-    const tag = await prisma.tags.upsert({
-      where: { name: tagName },
-      update: {},
-      create: { name: tagName },
-    });
+    const tag = await prisma.$transaction(async (tx) => {
+      const tag = await tx.tags.upsert({
+        where: { name: tagName },
+        update: {},
+        create: { name: tagName },
+      });
 
-    // tạo record trong SkillTags
-    await prisma.skillTags.create({
-      data: {
-        skillId: id,
-        tagId: tag.id,
-      },
+      await tx.skillTags.create({
+        data: { skillId: id, tagId: tag.id },
+      });
+
+      return tag;
     });
 
     return NextResponse.json({ message: "Tag added", tag });

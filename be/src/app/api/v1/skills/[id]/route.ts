@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import { checkVisibility } from "@/lib/checkVisibility";
@@ -52,30 +53,19 @@ export async function PUT(
       return NextResponse.json({ error: "Skill not found" }, { status: 404 });
     }
 
-    // Quyền sửa:
-    // - Admin có thể sửa tất cả
-    // - Owner có thể sửa skill của mình
-    if (payload.role !== "ADMIN" && payload.userId !== skill.ownerId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const dataToUpdate: Prisma.SkillsUpdateInput = {
+      title,
+      description,
+      visibility,
+    };
+    if (payload.role === "ADMIN" && typeof isDeleted !== "undefined") {
+      dataToUpdate.isDeleted = isDeleted;
     }
 
     // Update
     const updated = await prisma.skills.update({
       where: { id },
-      data: {
-        title,
-        description,
-        visibility,
-        isDeleted,
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        visibility: true,
-        ownerId: true,
-        updatedAt: true,
-      },
+      data: dataToUpdate,
     });
 
     return NextResponse.json({ skill: updated });

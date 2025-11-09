@@ -1,32 +1,28 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkVisibility } from "@/lib/checkVisibility";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
+    const { id } = await params;
+
     const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resources = await prisma.learningResources.findMany({
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        resourceType: true,
-        url: true,
-        content: true,
-        ordering: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const visibilityResult = await checkVisibility(req, id);
+    if (visibilityResult instanceof NextResponse) {
+      return visibilityResult;
+    }
 
-    return NextResponse.json({ resources });
+    const { skill } = visibilityResult;
+
+    return NextResponse.json({ resources: skill.resources });
   } catch (error) {
     console.error("Get resources error:", error);
     return NextResponse.json(
@@ -48,6 +44,14 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Kiểm tra skill có tồn tại không
+    const skillExists = await prisma.skills.findUnique({
+      where: { id },
+    });
+    if (!skillExists) {
+      return NextResponse.json({ error: "Skill not found" }, { status: 404 });
+    }
+
     const { title, resourceType, url, content, ordering } = await req.json();
 
     // Tạo exercise mới
@@ -59,16 +63,6 @@ export async function POST(
         url,
         content,
         ordering,
-      },
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        resourceType: true,
-        url: true,
-        content: true,
-        ordering: true,
-        createdAt: true,
       },
     });
 

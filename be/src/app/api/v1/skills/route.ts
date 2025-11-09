@@ -1,32 +1,56 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 export async function GET(req: Request) {
   try {
     const payload = verifyToken(req);
+    const { searchParams } = new URL(req.url);
+    const take = parseInt(searchParams.get("take") || "20");
+    const cursor = searchParams.get("cursor"); // ID của skill
+    const searchQuery = searchParams.get("q") || "";
+    const tagFilter = searchParams.get("tag"); // Tên của tag
 
-    let skills;
+    const whereCondition: Prisma.SkillsWhereInput = {
+      isDeleted: false,
+      title: { contains: searchQuery, mode: "insensitive" },
+      // Lọc theo tag nếu có
+      tags: tagFilter ? { some: { tag: { name: tagFilter } } } : undefined,
+    };
 
-    if (!payload) {
-      // Nếu chưa đăng nhập → chỉ trả PUBLIC
-      skills = await prisma.skills.findMany({
-        where: { isDeleted: false, visibility: "PUBLIC" },
-        orderBy: { createdAt: "desc" },
-      });
-    } else if (payload.role === "ADMIN") {
-      // Admin → thấy tất cả
-      skills = await prisma.skills.findMany({
-        // where: { isDeleted: false },
-        orderBy: { createdAt: "desc" },
-      });
-    } else if (payload.role === "STUDENT") {
-      // Student → chỉ thấy PUBLIC
-      skills = await prisma.skills.findMany({
-        where: { isDeleted: false, visibility: "PUBLIC" },
-        orderBy: { createdAt: "desc" },
-      });
+    if (!payload || payload.role === "STUDENT") {
+      whereCondition.visibility = "PUBLIC";
     }
+
+    const skills = await prisma.skills.findMany({
+      take,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      where: whereCondition,
+      orderBy: { createdAt: "desc" },
+      include: {
+        tags: {
+          // Từ SkillTags, lấy tiếp thông tin của Tag liên quan
+          include: {
+            tag: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+
+        owner: {
+          select: {
+            id: true,
+            fullName: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
 
     return NextResponse.json({ skills });
   } catch (error) {
