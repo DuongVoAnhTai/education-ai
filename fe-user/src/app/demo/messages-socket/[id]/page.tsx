@@ -1,4 +1,4 @@
-import MessageIdComponent from "@/components/MessageComponent/MessageIdComponent";
+import MessageIdComponent from "@/components/demo/MessageComponent/MessageIdComponent";
 
 async function MessageIdPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

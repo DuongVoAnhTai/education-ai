@@ -1,22 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { usePresence } from "@/context/PresenceContext";
+import ConversationItem from "./ConversationItem";
 import * as conversationService from "@/services/conversationServices";
 import * as Icon from "@/assets/Image";
 import * as messageHelper from "@/utils/messageHelper";
 
 interface MessageSidebarProps {
+  refreshKey?: number;
   setShowNewChatModal: (show: boolean) => void;
 }
 
-const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
+const MessageSidebar = ({
+  refreshKey,
+  setShowNewChatModal,
+}: MessageSidebarProps) => {
   const [apiConversations, setApiConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
 
   const [chatFilter, setChatFilter] = useState<ChatFilter>("all");
   const [search, setSearch] = useState("");
@@ -31,13 +39,14 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
     const fetchConversations = async () => {
       setLoading(true);
       setError(null);
-      const result = await conversationService.getConversations();
+      const result = await conversationService.getConversations({ take: 20 });
 
       if (result.error) {
         setError(result.error);
         console.error("Failed to fetch conversations:", result.error);
-      } else if (result.conversations) {
+      } else if (result && result.conversations) {
         setApiConversations(result.conversations);
+        setNextCursor(result.nextCursor);
         // Set conversation đầu tiên làm active nếu chưa có
         if (!activeConversationId && result.conversations.length > 0) {
           router.push(`/messages/${result.conversations[0].id}`);
@@ -47,7 +56,7 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
     };
 
     fetchConversations();
-  }, []);
+  }, [refreshKey]);
 
   const handleConversationClick = (conversationId: string) => {
     // Chỉ điều hướng nếu click vào conversation khác
@@ -55,6 +64,39 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
       router.push(`/messages/${conversationId}`);
     }
   };
+
+  const loadMoreConversations = useCallback(async () => {
+    if (loadingMore || !nextCursor) return;
+    setLoadingMore(true);
+
+    const result = await conversationService.getConversations({
+      take: 20,
+      cursor: nextCursor,
+    });
+
+    if (result && result.conversations) {
+      setApiConversations((prev) => [...prev, ...result.conversations]);
+      setNextCursor(result.nextCursor);
+    }
+    setLoadingMore(false);
+  }, [loadingMore, nextCursor]);
+
+  const lastConversationElementRef = useCallback(
+    (node: HTMLDivElement) => {
+      if (loading || loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        // Chỉ fetch khi có cursor tiếp theo
+        if (entries[0].isIntersecting && nextCursor) {
+          loadMoreConversations();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, nextCursor, loadMoreConversations]
+  );
 
   const filteredConversations = useMemo(() => {
     return apiConversations
@@ -143,114 +185,28 @@ const MessageSidebar = ({ setShowNewChatModal }: MessageSidebarProps) => {
             Không tìm thấy cuộc trò chuyện nào.
           </p>
         ) : (
-          filteredConversations.map((conv) => {
-            // Lấy các giá trị đã được tính toán để render
-            const type = messageHelper.getConversationType(conv);
-            const name = messageHelper.getConversationName(
-              conv,
-              fetchedUser?.id
-            );
-            const lastMessage = conv.messages[0];
-            const timestamp =
-              lastMessage?.createdAt || conv.updatedAt.toString();
-            const Icon = messageHelper.getConversationIcon(type);
-
-            let otherParticipant = null;
-            if (type === "direct") {
-              otherParticipant = conv.participants.find(
-                (p) => p.user.id !== fetchedUser?.id
-              );
-            }
-
-            const otherUserRole = conv.participants.find(
-              (p) => p.user.id !== fetchedUser?.id
-            )?.user.role;
-
-            const isOnline = otherParticipant
-              ? isUserOnline(otherParticipant.user.id)
-              : false;
-
-            return (
-              <div
-                key={conv.id}
-                onClick={() => handleConversationClick(conv.id)}
-                className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                  activeConversationId === conv.id
-                    ? "bg-blue-50 border-l-4 border-blue-500"
-                    : ""
-                }`}
-              >
-                <div className="relative">
-                  {/* Điều kiện 1: Nếu là chat 1-1 và tìm thấy người còn lại */}
-                  {type === "direct" && otherParticipant ? (
-                    otherParticipant.user.avatarUrl ? (
-                      // Nếu người đó có avatarUrl
-                      <Image
-                        src={otherParticipant.user.avatarUrl}
-                        alt={otherParticipant.user.fullName || "Avatar"}
-                        width={44}
-                        height={44}
-                        className="w-11 h-11 rounded-full object-cover"
-                      />
-                    ) : (
-                      // Nếu người đó không có avatarUrl, hiển thị chữ cái đầu
-                      <div className="w-11 h-11 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-white text-lg font-bold">
-                          {otherParticipant.user.fullName
-                            ?.charAt(0)
-                            .toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    )
-                  ) : (
-                    /* Điều kiện 2: Fallback cho chat Nhóm hoặc AI */
-                    <div
-                      className={`w-11 h-11 rounded-full flex items-center justify-center bg-gradient-to-r ${messageHelper.getAvatarGradient(
-                        type
-                      )}`}
-                    >
-                      <Icon size={20} className="text-white" />
-                    </div>
-                  )}
-
-                  {/* Logic hiển thị trạng thái online có thể thêm vào đây */}
-                  {isOnline && (
-                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
-                  )}
-                </div>
-
-                <div className="flex-1 ml-3 min-w-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {name}
-                      </h3>
-                      {otherUserRole === "ADMIN" && (
-                        <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">
-                          Teacher
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-600 truncate flex-1">
-                      {lastMessage?.content || "Bắt đầu cuộc trò chuyện"}
-                    </p>
-                    <span className="text-xs text-gray-500">
-                      {messageHelper.formatTimestamp(timestamp)}
-                    </span>
-                  </div>
-
-                  {type === "group" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {conv.participants.length} thành viên
-                    </p>
-                  )}
-                </div>
-              </div>
-            );
-          })
+          filteredConversations.map((conv, index) => (
+            <ConversationItem
+              key={conv.id}
+              conversation={conv}
+              isActive={activeConversationId === conv.id}
+              isLast={filteredConversations.length === index + 1}
+              currentUserId={fetchedUser?.id}
+              isUserOnline={isUserOnline}
+              lastElementRef={
+                filteredConversations.length === index + 1
+                  ? lastConversationElementRef
+                  : undefined
+              }
+              onClick={handleConversationClick}
+            />
+          ))
+        )}
+        {/* Icon Loading chỉ hiện khi đang fetch và có trang tiếp theo */}
+        {loadingMore && (
+          <div className="flex justify-center items-center p-4">
+            <Loader2 className="animate-spin text-gray-400" />
+          </div>
         )}
       </div>
     </>

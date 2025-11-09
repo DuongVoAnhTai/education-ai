@@ -1,8 +1,11 @@
 import * as httpRequest from "@/utils/httpRequest";
 
-export const getConversations = async () => {
+export const getConversations = async (
+  params: { take?: number; cursor?: string } = {}
+) => {
   try {
-    const res = await httpRequest.get("conversations");
+    const res = await httpRequest.get("conversations", { params });
+    // Service giờ sẽ trả về cả 'conversations' và 'nextCursor'
     return res; // { success: true, conversations: [...], count: number }
   } catch (error: any) {
     if (error.response?.data?.error) {
@@ -51,10 +54,14 @@ export const createConversation = async (
   }
 };
 
-export const getMessages = async (conversationId: string) => {
+export const getMessages = async (
+  conversationId: string,
+  params: { take?: number; cursor?: string } = {}
+) => {
   try {
     const res = await httpRequest.get(
-      `conversations/${conversationId}/message`
+      `conversations/${conversationId}/message`,
+      { params }
     );
     return res; // { success: true, messages: [...], count: number }
   } catch (error: any) {

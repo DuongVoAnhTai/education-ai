@@ -14,6 +14,10 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const take = parseInt(searchParams.get("take") || "20");
+    const cursor = searchParams.get("cursor");
+
     // Check if user is participant
     const participant = await prisma.conversationParticipants.findFirst({
       where: {
@@ -34,6 +38,10 @@ export async function GET(
     }
 
     const messages = await prisma.messages.findMany({
+      take: take,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+
       where: {
         conversationId: id,
       },
@@ -51,10 +59,19 @@ export async function GET(
       },
     });
 
+    let nextCursor: string | null = null;
+    if (messages.length === take) {
+      // Nếu số lượng tin nhắn lấy được bằng số lượng yêu cầu,
+      // có khả năng còn trang tiếp theo.
+      // Cursor tiếp theo sẽ là ID của tin nhắn cuối cùng (cũ nhất) trong batch này.
+      nextCursor = messages[take - 1].id;
+    }
+
     return NextResponse.json({
       success: true,
-      messages,
+      messages: messages.reverse(),
       count: messages.length,
+      nextCursor,
     });
   } catch (error) {
     console.error("Get messages error:", error);

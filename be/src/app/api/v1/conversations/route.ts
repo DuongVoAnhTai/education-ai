@@ -1,14 +1,28 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const payload = verifyToken(req);
     if (!payload)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const { searchParams } = new URL(req.url);
+    const take = parseInt(searchParams.get("take") || "20");
+    const cursor = searchParams.get("cursor"); // Đây là giá trị ID của cuộc trò chuyện cuối cùng
+
     const conversations = await prisma.conversations.findMany({
+      take: take,
+      // Bỏ qua bản ghi đầu tiên nếu có cursor
+      skip: cursor ? 1 : 0,
+      // Bắt đầu tìm từ cursor
+      cursor: cursor
+        ? {
+            id: cursor,
+          }
+        : undefined,
+
       where: {
         participants: { some: { userId: payload.userId } },
       },
@@ -43,7 +57,11 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json({ conversations });
+    // Trả về một cursor mới cho client để dùng cho lần fetch tiếp theo
+    const lastConversation = conversations[conversations.length - 1];
+    const nextCursor = lastConversation ? lastConversation.id : null;
+
+    return NextResponse.json({ conversations, nextCursor });
   } catch (error) {
     console.error("Get conversations error:", error);
     return NextResponse.json(

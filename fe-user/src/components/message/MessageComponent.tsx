@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 
@@ -22,7 +22,14 @@ function MessageComponent({ conversationId }: MessageComponentProps) {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState("");
+
   const [loading, setLoading] = useState(true);
+  const [loadingPrevious, setLoadingPrevious] = useState(false);
+
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const topObserver = useRef<IntersectionObserver | null>(null);
+  const topMessageElementRef = useRef<HTMLDivElement>(null);
+
   const [error, setError] = useState<string | null>(null);
   const [typingUsers, setTypingUsers] = useState<
     { userId: string; username: string }[]
@@ -46,19 +53,65 @@ function MessageComponent({ conversationId }: MessageComponentProps) {
     const fetchMessages = async () => {
       setLoading(true);
       setError(null);
-      const result = await conversationService.getMessages(conversationId);
+      const result = await conversationService.getMessages(conversationId, {
+        take: 20,
+      });
 
       if (result.error) {
         setError(result.error);
         toast.error(`Lỗi tải tin nhắn: ${result.error}`);
-      } else if (result.messages) {
+      } else if (result && result.messages) {
         setMessages(result.messages);
+        setNextCursor(result.nextCursor);
       }
       setLoading(false);
     };
 
     fetchMessages();
   }, [conversationId]);
+
+  const loadPreviousMessages = useCallback(async () => {
+    if (loadingPrevious || !nextCursor) return;
+    setLoadingPrevious(true);
+
+    const result = await conversationService.getMessages(conversationId, {
+      take: 20,
+      cursor: nextCursor,
+    });
+
+    if (result && result.messages) {
+      // Giữ vị trí cuộn
+      const scrollContainer = topMessageElementRef.current?.parentElement;
+      const oldScrollHeight = scrollContainer?.scrollHeight || 0;
+
+      setMessages((prev) => [...result.messages, ...prev]);
+      setNextCursor(result.nextCursor); // Cập nhật cursor mới
+
+      // Điều chỉnh lại vị trí cuộn
+      requestAnimationFrame(() => {
+        if (scrollContainer) {
+          scrollContainer.scrollTop =
+            scrollContainer.scrollHeight - oldScrollHeight;
+        }
+      });
+    }
+    setLoadingPrevious(false);
+  }, [conversationId, loadingPrevious, nextCursor]);
+
+  useEffect(() => {
+    const handleObserver = (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && nextCursor) {
+        loadPreviousMessages();
+      }
+    };
+    topObserver.current = new IntersectionObserver(handleObserver);
+
+    if (topMessageElementRef.current) {
+      topObserver.current.observe(topMessageElementRef.current);
+    }
+
+    return () => topObserver.current?.disconnect();
+  }, [loadPreviousMessages, nextCursor]);
 
   // --- XỬ LÝ SOCKET.IO ---
   useEffect(() => {
@@ -224,6 +277,13 @@ function MessageComponent({ conversationId }: MessageComponentProps) {
               </div>
             </div>
           )}
+          {loadingPrevious && (
+            <div className="flex justify-center p-2">
+              <Loader2 className="animate-spin text-gray-400" />
+            </div>
+          )}
+
+          {nextCursor && <div ref={topMessageElementRef} />}
 
           <MessageRender messages={messages} fetchedUser={fetchedUser} />
         </div>
