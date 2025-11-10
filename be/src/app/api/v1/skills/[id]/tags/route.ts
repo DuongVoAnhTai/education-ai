@@ -11,6 +11,7 @@ export async function GET(
   const { id } = await params;
 
   try {
+
     const visibilityResult = await checkVisibility(req, id);
     if (visibilityResult instanceof NextResponse) {
       return visibilityResult;

@@ -9,7 +9,7 @@ export const getSkills = async (
   } = {}
 ): Promise<{ skills: Skill[]; nextCursor: string | null }> => {
   try {
-    const res = await httpRequest.get("skills", { params });
+    const res = await httpRequest.get("skills", { params });    
     return res;
   } catch (error: any) {
     console.error("Failed to fetch skills:", error);

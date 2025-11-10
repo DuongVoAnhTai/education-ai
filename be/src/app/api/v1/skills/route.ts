@@ -52,7 +52,18 @@ export async function GET(req: Request) {
       },
     });
 
-    return NextResponse.json({ skills });
+    let nextCursor: string | null = null;
+    if (skills.length === take) {
+      nextCursor = skills[skills.length - 1].id;
+    }
+
+    const formattedSkills = skills.map((skill) => ({
+      ...skill,
+      // Thay thế mảng 'tags' phức tạp bằng một mảng tag đơn giản
+      tags: skill.tags.map((skillTag) => skillTag.tag),
+    }));
+
+    return NextResponse.json({ skills: formattedSkills, nextCursor });
   } catch (error) {
     console.error("Get skills error:", error);
     return NextResponse.json(
