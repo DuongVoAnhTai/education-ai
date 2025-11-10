@@ -14,12 +14,11 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { skillId, title, resourceType, url, content, ordering } =
-      await req.json();
+    const { title, resourceType, url, content, ordering } = await req.json();
 
     // Check resource có tồn tại không
     const existingResource = await prisma.learningResources.findUnique({
-      where: { id: id },
+      where: { id },
     });
 
     if (!existingResource) {
@@ -31,25 +30,8 @@ export async function PUT(
 
     // Cập nhật resource
     const updated = await prisma.learningResources.update({
-      where: { id: id },
-      data: {
-        skillId,
-        title,
-        resourceType,
-        url,
-        content,
-        ordering,
-      },
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        resourceType: true,
-        url: true,
-        content: true,
-        ordering: true,
-        updatedAt: true,
-      },
+      where: { id },
+      data: { title, resourceType, url, content, ordering },
     });
 
     return NextResponse.json({ resource: updated });
@@ -76,7 +58,7 @@ export async function DELETE(
 
     // Check resource có tồn tại không
     const existingResource = await prisma.learningResources.findUnique({
-      where: { id: id },
+      where: { id },
     });
 
     if (!existingResource) {
@@ -87,7 +69,7 @@ export async function DELETE(
     }
     // Xóa resource
     await prisma.learningResources.delete({
-      where: { id: id },
+      where: { id },
     });
 
     return NextResponse.json({ message: "Resource deleted successfully" });
