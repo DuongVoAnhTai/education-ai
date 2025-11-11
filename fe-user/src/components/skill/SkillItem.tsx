@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, AlertCircle } from "lucide-react";
-import * as resourceIcon from "@/assets/Icon";
+import { Loader2, AlertCircle, BookOpen } from "lucide-react";
+import * as resourceIcon from "@/assets/Icon/resourceIcon";
 import * as skillService from "@/services/skillServices";
 
 function SkillItem() {
@@ -115,10 +115,29 @@ function SkillItem() {
             <h3 className="text-xl font-semibold text-gray-800 mb-3">
               Giới thiệu
             </h3>
-            <p className="text-gray-600 whitespace-pre-wrap">
+            <p className="text-gray-600 whitespace-pre-wrap mb-5">
               {skill.description || "Chưa có mô tả cho kỹ năng này."}
             </p>
-            {/* Có thể thêm các thông tin khác ở đây, ví dụ: số bài tập, nút bắt đầu... */}
+
+            <hr />
+
+            {/* Phần bài tập */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-5">
+                Bài tập
+              </h3>
+              <div className="flex items-center text-sm text-gray-600 mb-4">
+                <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
+                <span>{skill.exercises?.length || 0} bài tập có sẵn</span>
+              </div>
+
+              {/* Nút điều hướng đến trang danh sách bài tập của skill này */}
+              <Link href={`/skills/${skill.id}/exercises`}>
+                <button className="w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg transition-all duration-200 cursor-pointer">
+                  Xem danh sách bài tập
+                </button>
+              </Link>
+            </div>
           </div>
         </aside>
       </div>
@@ -126,5 +145,4 @@ function SkillItem() {
   );
 }
 
-
-export default SkillItem
+export default SkillItem;

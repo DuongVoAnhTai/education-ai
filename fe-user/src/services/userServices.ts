@@ -58,3 +58,14 @@ export const changePassword = async (data: {
     return { error: "Change password failed" };
   }
 };
+
+export const getUserExerciseResults = async (): Promise<any> => {
+  try {
+    const res = await httpRequest.get("users/exercise-results");
+    return res;
+  } catch (error: any) {
+    return {
+      error: error.response?.data?.error || "Failed to get exercise results",
+    };
+  }
+};

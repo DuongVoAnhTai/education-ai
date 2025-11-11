@@ -1,4 +1,3 @@
-// Kiểu dữ liệu cơ bản cho một Tag
 interface Tag {
   id: string;
   name: string;
@@ -12,15 +11,6 @@ interface LearningResource {
   resourceType: "LINK" | "ARTICLE" | "VIDEO" | "FILE" | "NOTE";
   url?: string;
   content?: string;
-  ordering?: number;
-}
-
-// Kiểu dữ liệu cho Exercise (cơ bản)
-interface Exercise {
-  id: string;
-  skillId: string;
-  title: string;
-  description?: string;
   ordering?: number;
 }
 

@@ -21,7 +21,16 @@ export async function GET(
 
     const { skill } = visibilityResult;
 
-    return NextResponse.json({ exercises: skill.exercises });
+    const exercisesWithQuestionCount = await Promise.all(
+      skill.exercises.map(async (exercise) => {
+        const questionCount = await prisma.questions.count({
+          where: { exerciseId: exercise.id },
+        });
+        return { ...exercise, _count: { questions: questionCount } };
+      })
+    );
+
+    return NextResponse.json({ exercises: exercisesWithQuestionCount });
   } catch (error) {
     console.error("Get exercises error:", error);
     return NextResponse.json(
