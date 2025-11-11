@@ -80,12 +80,13 @@ model Users {
   isDeleted    Boolean  @default(false) @map("is_deleted")
 
   // Relations
-  skills         Skills[]
-  userAnswers    UserAnswers[]
-  conversations  Conversations[]
-  messages       Messages[]
-  participants   ConversationParticipants[]
-  passwordResets PasswordReset[]
+  skills              Skills[]
+  userAnswers         UserAnswers[]
+  conversations       Conversations[]
+  messages            Messages[]
+  participants        ConversationParticipants[]
+  passwordResets      PasswordReset[]
+  userSkillProgresses UserSkillProgress[]
 }
 
 model PasswordReset {
@@ -110,10 +111,11 @@ model Skills {
   isDeleted   Boolean    @default(false) @map("is_deleted")
 
   // Relations
-  owner     Users               @relation(fields: [ownerId], references: [id])
-  exercises Exercises[]
-  resources LearningResources[]
-  tags      SkillTags[]
+  owner               Users               @relation(fields: [ownerId], references: [id])
+  exercises           Exercises[]
+  resources           LearningResources[]
+  tags                SkillTags[]
+  userSkillProgresses UserSkillProgress[]
 }
 
 model Tags {
@@ -132,6 +134,18 @@ model SkillTags {
   tag   Tags   @relation(fields: [tagId], references: [id])
 
   @@id([skillId, tagId])
+}
+
+model UserSkillProgress {
+  userId             String @map("user_id")
+  skillId            String @map("skill_id")
+  completedExercises Int?   @map("completed_exercises")
+  totalExercises     Int?   @map("total_exercises")
+
+  user  Users  @relation(fields: [userId], references: [id])
+  skill Skills @relation(fields: [skillId], references: [id])
+
+  @@id([userId, skillId]) // Khóa chính là sự kết hợp của user và skill
 }
 
 model LearningResources {
