@@ -1,32 +1,27 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { checkVisibility } from "@/lib/checkVisibility";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const exercises = await prisma.exercises.findMany({
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        description: true,
-        ordering: true,
-        timeLimitSeconds: true,
-        passScore: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const visibilityResult = await checkVisibility(req, id);
+    if (visibilityResult instanceof NextResponse) {
+      return visibilityResult;
+    }
 
-    return NextResponse.json({ exercises });
+    const { skill } = visibilityResult;
+
+    return NextResponse.json({ exercises: skill.exercises });
   } catch (error) {
     console.error("Get exercises error:", error);
     return NextResponse.json(
@@ -36,21 +31,19 @@ export async function GET(req: Request) {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params;
     const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const {
-      skillId,
-      title,
-      description,
-      ordering,
-      timeLimitSeconds,
-      passScore,
-    } = await req.json();
+    const { title, description, ordering, timeLimitSeconds, passScore } =
+      await req.json();
 
     // Validate required fields
     if (!title) {
@@ -60,22 +53,12 @@ export async function POST(req: Request) {
     // Tạo exercise mới
     const exercise = await prisma.exercises.create({
       data: {
-        skillId,
+        skillId: id,
         title,
         description,
         ordering,
         timeLimitSeconds,
         passScore,
-      },
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        description: true,
-        ordering: true,
-        timeLimitSeconds: true,
-        passScore: true,
-        createdAt: true,
       },
     });
 

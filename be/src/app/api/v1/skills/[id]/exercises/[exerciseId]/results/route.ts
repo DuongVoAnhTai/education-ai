@@ -4,10 +4,10 @@ import { verifyToken } from "@/lib/auth";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ exerciseId: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { exerciseId } = await params;
 
     const payload = verifyToken(req);
     if (!payload) {
@@ -16,7 +16,7 @@ export async function GET(
 
     // lấy toàn bộ câu hỏi thuộc exercise
     const questions = await prisma.questions.findMany({
-      where: { exerciseId: id },
+      where: { exerciseId },
       select: { id: true, points: true },
     });
 
@@ -43,7 +43,7 @@ export async function GET(
     const wrongCount = answers.length - correctCount;
 
     return NextResponse.json({
-      exerciseId: id,
+      exerciseId,
       totalPoints,
       score,
       correctCount,

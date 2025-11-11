@@ -18,7 +18,7 @@ export async function PUT(
     const { answerText, matchType } = await req.json();
 
     const updated = await prisma.questionAnswerKeys.update({
-      where: { id: keyId },
+      where: { id: keyId, questionId: id },
       data: { answerText, matchType },
     });
 
@@ -46,7 +46,7 @@ export async function DELETE(
     }
 
     await prisma.questionAnswerKeys.delete({
-      where: { id: keyId },
+      where: { id: keyId, questionId: id },
     });
 
     return NextResponse.json({ message: "Answer key deleted" });

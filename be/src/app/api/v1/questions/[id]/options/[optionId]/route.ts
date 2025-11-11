@@ -15,6 +15,20 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const option = await prisma.questionOptions.findFirst({
+      where: {
+        id: optionId,
+        questionId: id,
+      },
+    });
+
+    if (!option) {
+      return NextResponse.json(
+        { error: "Option not found in this question" },
+        { status: 404 }
+      );
+    }
+
     const { content, isCorrect, ordering } = await req.json();
 
     const updated = await prisma.questionOptions.update({

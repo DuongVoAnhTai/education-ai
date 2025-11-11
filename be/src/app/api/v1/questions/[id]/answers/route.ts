@@ -18,7 +18,7 @@ export async function POST(
 
     // Lấy câu hỏi
     const question = await prisma.questions.findUnique({
-      where: { id: id },
+      where: { id },
       include: {
         options: true,
         answerKeys: true,

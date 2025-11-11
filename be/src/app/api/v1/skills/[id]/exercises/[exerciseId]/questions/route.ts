@@ -2,24 +2,19 @@ import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(req: Request) {
+export async function GET(
+  req: Request,
+  { params }: { params: { exerciseId: string } }
+) {
   try {
+    const { exerciseId } = await params;
     const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const questions = await prisma.questions.findMany({
-      select: {
-        id: true,
-        exerciseId: true,
-        questionType: true,
-        prompt: true,
-        points: true,
-        ordering: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      where: { exerciseId },
       orderBy: {
         createdAt: "desc",
       },
@@ -37,10 +32,10 @@ export async function GET(req: Request) {
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ exerciseId: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { exerciseId } = await params;
 
     const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
@@ -60,20 +55,11 @@ export async function POST(
     // Tạo exercise mới
     const question = await prisma.questions.create({
       data: {
-        exerciseId: id,
+        exerciseId,
         questionType,
         prompt,
         points,
         ordering,
-      },
-      select: {
-        id: true,
-        exerciseId: true,
-        questionType: true,
-        prompt: true,
-        points: true,
-        ordering: true,
-        createdAt: true,
       },
     });
 

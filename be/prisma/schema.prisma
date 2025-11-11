@@ -151,7 +151,7 @@ model LearningResources {
 model Exercises {
   id               String   @id @default(uuid())
   skillId          String?  @map("skill_id")
-  prerequisiteId String? @unique @map("prerequisite_id") // ID của bài tập phải hoàn thành trước
+  prerequisiteId   String?  @unique @map("prerequisite_id") // ID của bài tập phải hoàn thành trước
   title            String?
   description      String?
   ordering         Int?
@@ -160,10 +160,10 @@ model Exercises {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  skill     Skills?     @relation(fields: [skillId], references: [id])
-  questions Questions[]
-  prerequisite  Exercises? @relation("ExercisePrerequisites", fields: [prerequisiteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  unlocks       Exercises? @relation("ExercisePrerequisites")
+  skill        Skills?     @relation(fields: [skillId], references: [id])
+  questions    Questions[]
+  prerequisite Exercises?  @relation("ExercisePrerequisites", fields: [prerequisiteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  unlocks      Exercises?  @relation("ExercisePrerequisites")
 }
 
 model Questions {

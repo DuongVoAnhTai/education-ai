@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string; exerciseId: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id, exerciseId } = await params;
     const payload = verifyToken(req);
 
     if (!payload) {
@@ -15,13 +15,27 @@ export async function GET(
     }
 
     const exercise = await prisma.exercises.findUnique({
-      where: { id },
+      where: { id: exerciseId, skillId: id },
       include: {
         questions: {
           orderBy: { ordering: "asc" },
+
+          include: {
+            options: {
+              select: { id: true, content: true, ordering: true },
+              orderBy: { ordering: "asc" },
+            },
+          },
         },
       },
     });
+
+    if (!exercise) {
+      return NextResponse.json(
+        { error: "Exercise not found in this skill" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({ exercise });
   } catch (error) {
@@ -35,7 +49,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string; exerciseId: string }> }
 ) {
   try {
     const payload = verifyToken(req);
@@ -44,18 +58,15 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
-    const {
-      skillId,
-      title,
-      description,
-      ordering,
-      timeLimitSeconds,
-      passScore,
-    } = await req.json();
+    const { id, exerciseId } = await params;
+
+    const { title, description, ordering, timeLimitSeconds, passScore } =
+      await req.json();
 
     // Lấy exercise
-    const exercise = await prisma.exercises.findUnique({ where: { id } });
+    const exercise = await prisma.exercises.findUnique({
+      where: { id: exerciseId, skillId: id },
+    });
     if (!exercise) {
       return NextResponse.json(
         { error: "Exercise not found" },
@@ -65,32 +76,21 @@ export async function PUT(
 
     // Update
     const updated = await prisma.exercises.update({
-      where: { id },
+      where: { id: exerciseId, skillId: id },
       data: {
-        skillId,
         title,
         description,
         ordering,
         timeLimitSeconds,
         passScore,
       },
-      select: {
-        id: true,
-        skillId: true,
-        title: true,
-        description: true,
-        ordering: true,
-        timeLimitSeconds: true,
-        passScore: true,
-        updatedAt: true,
-      },
     });
 
-    return NextResponse.json({ skill: updated });
+    return NextResponse.json({ exercise: updated });
   } catch (error) {
-    console.error("Update skill error:", error);
+    console.error("Update exercise error:", error);
     return NextResponse.json(
-      { error: "Failed to update skill" },
+      { error: "Failed to update exercise" },
       { status: 500 }
     );
   }
@@ -98,10 +98,10 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string; exerciseId: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id, exerciseId } = await params;
 
     const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
@@ -110,7 +110,7 @@ export async function DELETE(
 
     // Check exercise có tồn tại không
     const existingExercise = await prisma.exercises.findUnique({
-      where: { id: id },
+      where: { id: exerciseId, skillId: id },
     });
 
     if (!existingExercise) {
@@ -121,7 +121,7 @@ export async function DELETE(
     }
     // Xóa resource
     await prisma.exercises.delete({
-      where: { id: id },
+      where: { id: exerciseId, skillId: id },
     });
 
     return NextResponse.json({ message: "Exercise deleted successfully" });
