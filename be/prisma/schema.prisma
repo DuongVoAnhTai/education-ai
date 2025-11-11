@@ -151,6 +151,7 @@ model LearningResources {
 model Exercises {
   id               String   @id @default(uuid())
   skillId          String?  @map("skill_id")
+  prerequisiteId String? @unique @map("prerequisite_id") // ID của bài tập phải hoàn thành trước
   title            String?
   description      String?
   ordering         Int?
@@ -161,6 +162,8 @@ model Exercises {
 
   skill     Skills?     @relation(fields: [skillId], references: [id])
   questions Questions[]
+  prerequisite  Exercises? @relation("ExercisePrerequisites", fields: [prerequisiteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  unlocks       Exercises? @relation("ExercisePrerequisites")
 }
 
 model Questions {
@@ -186,7 +189,7 @@ model QuestionOptions {
   isCorrect  Boolean @default(false) @map("is_correct")
   ordering   Int?
 
-  question    Questions?    @relation(fields: [questionId], references: [id])
+  question    Questions?    @relation(fields: [questionId], references: [id], onDelete: Cascade)
   userAnswers UserAnswers[]
 }
 
@@ -196,7 +199,7 @@ model QuestionAnswerKeys {
   answerText String    @map("answer_text")
   matchType  MatchType @map("match_type")
 
-  question Questions? @relation(fields: [questionId], references: [id])
+  question Questions? @relation(fields: [questionId], references: [id], onDelete: Cascade)
 }
 
 model UserAnswers {
@@ -211,6 +214,8 @@ model UserAnswers {
   user     Users?           @relation(fields: [userId], references: [id])
   question Questions?       @relation(fields: [questionId], references: [id])
   option   QuestionOptions? @relation(fields: [selectedOptionId], references: [id])
+
+  @@unique([userId, questionId])
 }
 
 model Conversations {

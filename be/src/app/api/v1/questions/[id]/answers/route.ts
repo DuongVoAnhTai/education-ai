@@ -51,9 +51,17 @@ export async function POST(
       }
     }
 
-    // Lưu UserAnswer
-    const userAnswer = await prisma.userAnswers.create({
-      data: {
+    const userAnswer = await prisma.userAnswers.upsert({
+      where: { userId_questionId: { userId: payload.userId, questionId: id } },
+      update: {
+        // Cập nhật nếu đã tồn tại
+        selectedOptionId,
+        answerText,
+        score,
+        submittedAt: new Date(),
+      },
+      create: {
+        // Tạo mới nếu chưa có
         userId: payload.userId,
         questionId: id,
         selectedOptionId,

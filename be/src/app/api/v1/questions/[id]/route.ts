@@ -14,12 +14,12 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { exerciseId, questionType, prompt, points, ordering } =
+    const { questionType, prompt, points, ordering } =
       await req.json();
 
     // Check question có tồn tại không
     const existingQuestion = await prisma.questions.findUnique({
-      where: { id: id },
+      where: { id },
     });
 
     if (!existingQuestion) {
@@ -31,22 +31,12 @@ export async function PUT(
 
     // Cập nhật question
     const updated = await prisma.questions.update({
-      where: { id: id },
+      where: { id },
       data: {
-        exerciseId,
         questionType,
         prompt,
         points,
         ordering,
-      },
-      select: {
-        id: true,
-        exerciseId: true,
-        questionType: true,
-        prompt: true,
-        points: true,
-        ordering: true,
-        updatedAt: true,
       },
     });
 
@@ -60,40 +50,40 @@ export async function PUT(
   }
 }
 
-// export async function DELETE(
-//   req: Request,
-//   { params }: { params: Promise<{ id: string }> }
-// ) {
-//   try {
-//     const { id } = await params;
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
 
-//     const payload = await verifyToken(req);
-//     if (!payload || payload.role !== "ADMIN") {
-//       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-//     }
+    const payload = await verifyToken(req);
+    if (!payload || payload.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-//     // Check resource có tồn tại không
-//     const existingResource = await prisma.learningResources.findUnique({
-//       where: { id: id },
-//     });
+    // Check resource có tồn tại không
+    const existingResource = await prisma.questions.findUnique({
+      where: { id: id },
+    });
 
-//     if (!existingResource) {
-//       return NextResponse.json(
-//         { error: "Resource not found" },
-//         { status: 404 }
-//       );
-//     }
-//     // Xóa resource
-//     await prisma.learningResources.delete({
-//       where: { id: id },
-//     });
+    if (!existingResource) {
+      return NextResponse.json(
+        { error: "Resource not found" },
+        { status: 404 }
+      );
+    }
+    // Xóa resource
+    await prisma.questions.delete({
+      where: { id: id },
+    });
 
-//     return NextResponse.json({ message: "Resource deleted successfully" });
-//   } catch (error) {
-//     console.error("Delete resource error:", error);
-//     return NextResponse.json(
-//       { error: "Failed to delete resource" },
-//       { status: 500 }
-//     );
-//   }
-// }
+    return NextResponse.json({ message: "Question deleted successfully" });
+  } catch (error) {
+    console.error("Delete question error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete question" },
+      { status: 500 }
+    );
+  }
+}

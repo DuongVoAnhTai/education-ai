@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Hash, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import * as resourceIcon from "@/assets/Icon";
 import * as skillService from "@/services/skillServices";
 

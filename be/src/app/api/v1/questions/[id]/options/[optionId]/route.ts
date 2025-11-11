@@ -18,7 +18,7 @@ export async function PUT(
     const { content, isCorrect, ordering } = await req.json();
 
     const updated = await prisma.questionOptions.update({
-      where: { id: optionId },
+      where: { id: optionId, questionId: id },
       data: { content, isCorrect, ordering },
     });
 
@@ -46,7 +46,7 @@ export async function DELETE(
     }
 
     await prisma.questionOptions.delete({
-      where: { id: optionId },
+      where: { id: optionId, questionId: id },
     });
 
     return NextResponse.json({ message: "Option deleted" });
