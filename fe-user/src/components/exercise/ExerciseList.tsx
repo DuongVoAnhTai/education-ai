@@ -227,7 +227,7 @@ export default function ExerciseList() {
                     </div>
 
                     <div className="mt-6">
-                      <button className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg font-medium transition-all bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:scale-105">
+                      <button className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg font-medium transition-all bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg transform hover:scale-105 cursor-pointer">
                         <Icon.Play size={18} />
                         <span>{userAttempt ? "Làm lại" : "Bắt đầu"}</span>
                       </button>

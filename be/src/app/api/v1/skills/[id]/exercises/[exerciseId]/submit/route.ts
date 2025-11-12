@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-import { MatchType } from "@/generated/prisma";
+import checkMatch from "@/lib/checkMatch";
 
 export async function POST(
   req: Request,
@@ -24,7 +24,7 @@ export async function POST(
 
     // Mọi thao tác đều nằm trong đây để đảm bảo tính toàn vẹn dữ liệu
     const submissionResult = await prisma.$transaction(async (tx) => {
-      // 1. Lấy thông tin bài tập và tất cả câu hỏi + đáp án đúng
+      // 1. Lấy thông tin bài tập và tất cả câu hỏi + Hết giờ! Hệ thđáp án đúng
       const exercise = await tx.exercises.findUnique({
         where: { id: exerciseId },
         include: {
@@ -78,7 +78,66 @@ export async function POST(
             }
           }
         }
-        // (Thêm logic cho MULTIPLE_CHOICE, LONG_ANSWER... nếu cần)
+        // else if (
+        //   question.questionType === "MULTIPLE_CHOICE" &&
+        //   userAnswer.selectedOptionIds &&
+        //   Array.isArray(userAnswer.selectedOptionIds)
+        // ) {
+        //   const correctOptionIds = new Set(
+        //     question.options.filter((o) => o.isCorrect).map((o) => o.id)
+        //   );
+        //   const selectedOptionIds = new Set(userAnswer.selectedOptionIds);
+
+        //   // Chấm điểm tuyệt đối: Phải chọn đúng và đủ tất cả các đáp án đúng
+        //   let isFullyCorrect = true;
+        //   if (correctOptionIds.size !== selectedOptionIds.size) {
+        //     isFullyCorrect = false;
+        //   } else {
+        //     for (const id of correctOptionIds) {
+        //       if (!selectedOptionIds.has(id)) {
+        //         isFullyCorrect = false;
+
+        //         break;
+        //       }
+        //     }
+        //   }
+
+        //   if (isFullyCorrect) {
+        //     score = question.points;
+        //   }
+        //   // (Tùy chọn nâng cao: chấm điểm từng phần nếu chỉ đúng một vài lựa chọn)
+        // }
+        else if (
+          question.questionType === "LONG_ANSWER" &&
+          userAnswer.answerText
+        ) {
+          score = 0; // Gán điểm mặc định là 0, chờ chấm thủ công
+        } 
+        // else if (
+        //   question.questionType === "MATCHING" &&
+        //   userAnswer.matchingPairs
+        // ) {
+        //   let correctMatches = 0;
+        //   const correctAnswers = new Map(
+        //     question.options
+        //       .filter((o) => o.matchGroup === "A")
+        //       .map((o) => [o.id, o.correctMatchId])
+        //   );
+
+        //   for (const pair of userAnswer.matchingPairs) {
+        //     if (correctAnswers.get(pair.stemId) === pair.optionId) {
+        //       correctMatches++;
+        //     }
+        //   }
+
+        //   // Chấm điểm: có thể là tất cả hoặc không, hoặc chấm từng phần
+        //   if (correctMatches === correctAnswers.size) {
+        //     score = question.points;
+        //   } else {
+        //     // Chấm điểm từng phần (tùy chọn)
+        //     // score = (correctMatches / correctAnswers.size) * question.points;
+        //   }
+        // }
 
         totalScore += score;
 
@@ -111,6 +170,55 @@ export async function POST(
       // 4. Thực thi tất cả các thao tác lưu câu trả lời
       await Promise.all(answerProcessingPromises);
 
+      // a. Lấy TẤT CẢ các bài tập thuộc về SKILL này
+      const allExercisesInSkill = await tx.exercises.findMany({
+        where: { skillId: exercise.skillId },
+        include: { questions: { select: { points: true } } },
+      });
+      const totalExercisesInSkill = allExercisesInSkill.length;
+
+      // b. Lấy TẤT CẢ các câu trả lời của user cho TOÀN BỘ SKILL
+      const allUserAnswersInSkill = await tx.userAnswers.findMany({
+        where: {
+          userId: payload.userId,
+          question: { exercise: { skillId: exercise.skillId } },
+        },
+        select: { score: true, question: { select: { exerciseId: true } } },
+      });
+
+      // c. Tính toán lại số bài tập đã đạt
+      let passedExercisesCount = 0;
+      const scoresByExercise = allUserAnswersInSkill.reduce((acc, answer) => {
+        const exerciseId = answer.question?.exerciseId;
+        if (!exerciseId) return acc;
+
+        if (!acc[exerciseId]) {
+          acc[exerciseId] = 0;
+        }
+        acc[exerciseId] += answer.score || 0;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Bây giờ, `scoresByExercise` chứa điểm của các bài đã làm TRƯỚC ĐÓ.
+      // Chúng ta cần cập nhật nó với kết quả của bài vừa nộp.
+      scoresByExercise[exerciseId] = totalScore;
+
+      for (const ex of allExercisesInSkill) {
+        const userScore = scoresByExercise[ex.id];
+        if (userScore !== undefined && ex.passScore != null) {
+          const totalPoints = ex.questions.reduce(
+            (sum, q) => sum + q.points,
+            0
+          );
+          if (
+            totalPoints > 0 &&
+            (userScore / totalPoints) * 100 >= ex.passScore
+          ) {
+            passedExercisesCount++;
+          }
+        }
+      }
+
       // 5. Cập nhật tiến độ của người dùng với kỹ năng (nếu có)
       if (exercise.skillId) {
         await tx.userSkillProgress.upsert({
@@ -121,15 +229,13 @@ export async function POST(
             },
           },
           update: {
-            // Cập nhật các trường cần thiết, ví dụ: tăng completedExercises
+            completedExercises: passedExercisesCount,
           },
           create: {
             userId: payload.userId,
             skillId: exercise.skillId,
-            completedExercises: 1, // Ví dụ
-            totalExercises: await tx.exercises.count({
-              where: { skillId: exercise.skillId },
-            }),
+            completedExercises: passedExercisesCount,
+            totalExercises: totalExercisesInSkill,
           },
         });
       }
@@ -161,28 +267,5 @@ export async function POST(
       { error: "Failed to submit exercise" },
       { status: 500 }
     );
-  }
-}
-
-function checkMatch(
-  input: string,
-  expected: string,
-  matchType: MatchType
-): boolean {
-  switch (matchType) {
-    case "EXACT":
-      return input.trim() === expected.trim();
-    case "CASE_INSENSITIVE":
-      return input.trim().toLowerCase() === expected.trim().toLowerCase();
-    case "CONTAINS":
-      return input.trim().toLowerCase().includes(expected.trim().toLowerCase());
-    case "REGEX":
-      try {
-        return new RegExp(expected).test(input);
-      } catch (e) {
-        return false;
-      }
-    default:
-      return false;
   }
 }

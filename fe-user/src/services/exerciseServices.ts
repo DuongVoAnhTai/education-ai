@@ -62,7 +62,7 @@ export const submitExercise = async (
     return res;
   } catch (error: any) {
     return {
-      error: error.response?.data?.error || "Failed to submit exercise",
+      error: error.response?.data?.error,
     };
   }
 };
