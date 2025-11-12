@@ -19,3 +19,12 @@ interface ExerciseResult {
   totalPoints: number;
   isPassed: boolean;
 }
+
+interface ExerciseResultData {
+  exerciseId: string;
+  totalPoints: number;
+  score: number;
+  correctCount: number;
+  wrongCount: number;
+  answers: any[]; // Cần định nghĩa kiểu chi tiết hơn cho UserAnswer
+}

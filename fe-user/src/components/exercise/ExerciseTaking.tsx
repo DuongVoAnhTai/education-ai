@@ -4,9 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
+import QuestionRenderer from "./QuestionRenderer";
 import * as exerciseService from "@/services/exerciseServices";
 import * as Icon from "@/assets/Image/exerciseIcon";
-import QuestionRenderer from "./QuestionRenderer";
 
 interface ExerciseTakingProps {
   skillId: string;
@@ -73,8 +73,6 @@ export default function ExerciseTaking({
     const answersToSubmit: SubmissionAnswer[] = [];
     exercise.questions.forEach((question) => {
       const answer = userAnswers.get(question.id);
-      console.log("LOG", answer);
-      
 
       if (answer) {
         answersToSubmit.push({

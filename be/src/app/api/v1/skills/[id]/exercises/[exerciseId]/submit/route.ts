@@ -23,7 +23,7 @@ export async function POST(
     }
 
     // Mọi thao tác đều nằm trong đây để đảm bảo tính toàn vẹn dữ liệu
-    const submissionResult = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 1. Lấy thông tin bài tập và tất cả câu hỏi + Hết giờ! Hệ thđáp án đúng
       const exercise = await tx.exercises.findUnique({
         where: { id: exerciseId },
@@ -112,7 +112,7 @@ export async function POST(
           userAnswer.answerText
         ) {
           score = 0; // Gán điểm mặc định là 0, chờ chấm thủ công
-        } 
+        }
         // else if (
         //   question.questionType === "MATCHING" &&
         //   userAnswer.matchingPairs
@@ -171,91 +171,91 @@ export async function POST(
       await Promise.all(answerProcessingPromises);
 
       // a. Lấy TẤT CẢ các bài tập thuộc về SKILL này
-      const allExercisesInSkill = await tx.exercises.findMany({
-        where: { skillId: exercise.skillId },
-        include: { questions: { select: { points: true } } },
-      });
-      const totalExercisesInSkill = allExercisesInSkill.length;
+      // const allExercisesInSkill = await tx.exercises.findMany({
+      //   where: { skillId: exercise.skillId },
+      //   include: { questions: { select: { points: true } } },
+      // });
+      // const totalExercisesInSkill = allExercisesInSkill.length;
 
       // b. Lấy TẤT CẢ các câu trả lời của user cho TOÀN BỘ SKILL
-      const allUserAnswersInSkill = await tx.userAnswers.findMany({
-        where: {
-          userId: payload.userId,
-          question: { exercise: { skillId: exercise.skillId } },
-        },
-        select: { score: true, question: { select: { exerciseId: true } } },
-      });
+      // const allUserAnswersInSkill = await tx.userAnswers.findMany({
+      //   where: {
+      //     userId: payload.userId,
+      //     question: { exercise: { skillId: exercise.skillId } },
+      //   },
+      //   select: { score: true, question: { select: { exerciseId: true } } },
+      // });
 
       // c. Tính toán lại số bài tập đã đạt
-      let passedExercisesCount = 0;
-      const scoresByExercise = allUserAnswersInSkill.reduce((acc, answer) => {
-        const exerciseId = answer.question?.exerciseId;
-        if (!exerciseId) return acc;
+      // let passedExercisesCount = 0;
+      // const scoresByExercise = allUserAnswersInSkill.reduce((acc, answer) => {
+      //   const exerciseId = answer.question?.exerciseId;
+      //   if (!exerciseId) return acc;
 
-        if (!acc[exerciseId]) {
-          acc[exerciseId] = 0;
-        }
-        acc[exerciseId] += answer.score || 0;
-        return acc;
-      }, {} as Record<string, number>);
+      //   if (!acc[exerciseId]) {
+      //     acc[exerciseId] = 0;
+      //   }
+      //   acc[exerciseId] += answer.score || 0;
+      //   return acc;
+      // }, {} as Record<string, number>);
 
       // Bây giờ, `scoresByExercise` chứa điểm của các bài đã làm TRƯỚC ĐÓ.
       // Chúng ta cần cập nhật nó với kết quả của bài vừa nộp.
-      scoresByExercise[exerciseId] = totalScore;
+      // scoresByExercise[exerciseId] = totalScore;
 
-      for (const ex of allExercisesInSkill) {
-        const userScore = scoresByExercise[ex.id];
-        if (userScore !== undefined && ex.passScore != null) {
-          const totalPoints = ex.questions.reduce(
-            (sum, q) => sum + q.points,
-            0
-          );
-          if (
-            totalPoints > 0 &&
-            (userScore / totalPoints) * 100 >= ex.passScore
-          ) {
-            passedExercisesCount++;
-          }
-        }
-      }
+      // for (const ex of allExercisesInSkill) {
+      //   const userScore = scoresByExercise[ex.id];
+      //   if (userScore !== undefined && ex.passScore != null) {
+      //     const totalPoints = ex.questions.reduce(
+      //       (sum, q) => sum + q.points,
+      //       0
+      //     );
+      //     if (
+      //       totalPoints > 0 &&
+      //       (userScore / totalPoints) * 100 >= ex.passScore
+      //     ) {
+      //       passedExercisesCount++;
+      //     }
+      //   }
+      // }
 
       // 5. Cập nhật tiến độ của người dùng với kỹ năng (nếu có)
-      if (exercise.skillId) {
-        await tx.userSkillProgress.upsert({
-          where: {
-            userId_skillId: {
-              userId: payload.userId,
-              skillId: exercise.skillId,
-            },
-          },
-          update: {
-            completedExercises: passedExercisesCount,
-          },
-          create: {
-            userId: payload.userId,
-            skillId: exercise.skillId,
-            completedExercises: passedExercisesCount,
-            totalExercises: totalExercisesInSkill,
-          },
-        });
-      }
+      // if (exercise.skillId) {
+      //   await tx.userSkillProgress.upsert({
+      //     where: {
+      //       userId_skillId: {
+      //         userId: payload.userId,
+      //         skillId: exercise.skillId,
+      //       },
+      //     },
+      //     update: {
+      //       completedExercises: passedExercisesCount,
+      //     },
+      //     create: {
+      //       userId: payload.userId,
+      //       skillId: exercise.skillId,
+      //       completedExercises: passedExercisesCount,
+      //       totalExercises: totalExercisesInSkill,
+      //     },
+      //   });
+      // }
 
-      const totalPoints = exercise.questions.reduce(
-        (sum, q) => sum + q.points,
-        0
-      );
+      // const totalPoints = exercise.questions.reduce(
+      //   (sum, q) => sum + q.points,
+      //   0
+      // );
 
-      return {
-        totalScore,
-        totalPoints,
-        isPassed:
-          exercise.passScore != null ? totalScore >= exercise.passScore : null,
-      };
+      // return {
+      //   totalScore,
+      //   totalPoints,
+      //   isPassed:
+      //     exercise.passScore != null ? totalScore >= exercise.passScore : null,
+      // };
     });
     // --- KẾT THÚC TRANSACTION ---
 
     return NextResponse.json(
-      { message: "Bài làm đã được nộp thành công!", result: submissionResult },
+      { success: true, message: "Bài làm đã được nộp." },
       { status: 200 }
     );
   } catch (error: any) {

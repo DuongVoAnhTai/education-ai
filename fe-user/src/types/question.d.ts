@@ -20,4 +20,5 @@ interface Question {
   points: number;
   ordering?: number;
   options?: QuestionOption[]; // Dành cho câu trắc nghiệm
+  answerKeys?: QuestionAnswerKey[];
 }

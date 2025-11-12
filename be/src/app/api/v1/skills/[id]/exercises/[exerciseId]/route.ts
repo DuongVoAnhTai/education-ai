@@ -22,9 +22,15 @@ export async function GET(
 
           include: {
             options: {
-              select: { id: true, content: true, ordering: true },
+              select: {
+                id: true,
+                content: true,
+                isCorrect: true,
+                ordering: true,
+              },
               orderBy: { ordering: "asc" },
             },
+            answerKeys: true,
           },
         },
       },
