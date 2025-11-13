@@ -1,5 +1,7 @@
-interface UserSubmissionAnswer {
+type UserSubmissionAnswer = {
   questionId: string;
-  selectedOptionId?: string; // Cho câu hỏi trắc nghiệm
-  answerText?: string; // Cho câu hỏi tự luận ngắn
+  selectedOptionId?: string; // Cho SINGLE_CHOICE
+  // selectedOptionIds?: string[]; // Cho MULTIPLE_CHOICE
+  answerText?: string; // Cho các loại text
+  // matchingPairs?: { stemId: string; optionId: string }[]; // Cho MATCHING
 };

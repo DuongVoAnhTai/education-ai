@@ -52,12 +52,15 @@ export const submitSingleAnswer = async (
 export const submitExercise = async (
   skillId: string,
   exerciseId: string,
-  answers: SubmissionAnswer[]
+  submissionData: {
+    answers: SubmissionAnswer[];
+    timeSpentSeconds: number;
+  }
 ): Promise<any> => {
   try {
     const res = await httpRequest.post(
       `skills/${skillId}/exercises/${exerciseId}/submit`,
-      answers
+      submissionData
     );
     return res;
   } catch (error: any) {

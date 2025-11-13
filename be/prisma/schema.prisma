@@ -87,6 +87,7 @@ model Users {
   participants        ConversationParticipants[]
   passwordResets      PasswordReset[]
   userSkillProgresses UserSkillProgress[]
+  userSubmissions     UserSubmissions[]
 }
 
 model PasswordReset {
@@ -139,6 +140,7 @@ model SkillTags {
 model UserSkillProgress {
   userId             String @map("user_id")
   skillId            String @map("skill_id")
+  progress           Float?
   completedExercises Int?   @map("completed_exercises")
   totalExercises     Int?   @map("total_exercises")
 
@@ -146,6 +148,23 @@ model UserSkillProgress {
   skill Skills @relation(fields: [skillId], references: [id])
 
   @@id([userId, skillId]) // Khóa chính là sự kết hợp của user và skill
+}
+
+model UserSubmissions {
+  id         String @id @default(uuid())
+  userId     String @map("user_id")
+  exerciseId String @map("exercise_id")
+
+  score            Float
+  totalPoints      Float    @map("total_points")
+  isPassed         Boolean  @map("is_passed")
+  timeSpentSeconds Int?     @map("time_spent_seconds")
+  submittedAt      DateTime @default(now()) @map("submitted_at")
+
+  user     Users     @relation(fields: [userId], references: [id])
+  exercise Exercises @relation(fields: [exerciseId], references: [id])
+
+  @@unique([userId, exerciseId])
 }
 
 model LearningResources {
@@ -178,6 +197,7 @@ model Exercises {
   questions       Questions[]
   prerequisite    Exercises?        @relation("ExercisePrerequisites", fields: [prerequisiteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   unlocks         Exercises?        @relation("ExercisePrerequisites")
+  userSubmissions UserSubmissions[]
 }
 
 model Questions {

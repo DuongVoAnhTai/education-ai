@@ -69,6 +69,9 @@ export default function ExerciseTaking({
     setIsSubmitting(true);
     setShowConfirmModal(false);
 
+    // 1. Tính toán thời gian làm bài
+    const timeSpent = (exercise.timeLimitSeconds || 0) - timeRemaining;
+
     // 1. Thu thập câu trả lời thành mảng để gửi đi
     const answersToSubmit: SubmissionAnswer[] = [];
     exercise.questions.forEach((question) => {
@@ -78,6 +81,7 @@ export default function ExerciseTaking({
         answersToSubmit.push({
           questionId: question.id,
           selectedOptionId: answer.selectedOptionId,
+          // selectedOptionIds: answer.selectedOptionIds, // Cho multiple choice
           answerText: answer.answerText,
         });
       } else {
@@ -88,11 +92,10 @@ export default function ExerciseTaking({
     });
 
     // 2. Gọi API nộp bài
-    const result = await exerciseService.submitExercise(
-      skillId,
-      exercise.id,
-      answersToSubmit
-    );
+    const result = await exerciseService.submitExercise(skillId, exercise.id, {
+      answers: answersToSubmit,
+      timeSpentSeconds: timeSpent,
+    });
 
     if (result.error) {
       toast.error(result.error);
@@ -102,7 +105,7 @@ export default function ExerciseTaking({
       toast.success("Nộp bài thành công!");
       router.push(`/skills/${skillId}/exercises/${exercise.id}/result`);
     }
-  }, [exercise, userAnswers, skillId, router, isSubmitting]);
+  }, [exercise, userAnswers, skillId, timeRemaining, router, isSubmitting]);
 
   // --- LOGIC HẸN GIỜ ---
   useEffect(() => {

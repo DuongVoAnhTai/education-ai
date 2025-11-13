@@ -10,91 +10,37 @@ export async function GET(req: Request) {
     }
 
     // 1. Lấy tất cả câu trả lời của user
-    const userAnswers = await prisma.userAnswers.findMany({
+    const submissions = await prisma.userSubmissions.findMany({
       where: { userId: payload.userId },
       orderBy: { submittedAt: "desc" },
       include: {
-        question: {
-          // Lấy thông tin câu hỏi để biết nó thuộc exercise nào
-          select: {
-            exerciseId: true,
-            points: true,
-          },
-        },
-      },
-    });
-
-    // 2. Nhóm các câu trả lời theo exerciseId và tính toán kết quả
-    const resultsByExercise = userAnswers.reduce((acc, answer) => {
-      const exerciseId = answer.question?.exerciseId;
-      if (!exerciseId) return acc;
-
-      // Khởi tạo nếu chưa có
-      if (!acc[exerciseId]) {
-        acc[exerciseId] = {
-          exerciseId: exerciseId,
-          userScore: 0,
-          // attemptedQuestions: 0,
-          submittedAt: answer.submittedAt,
-        };
-      }
-
-      // Cộng điểm
-      acc[exerciseId].userScore += answer.score || 0;
-      // acc[exerciseId].attemptedQuestions += 1;
-
-      return acc;
-    }, {} as Record<string, { exerciseId: string; userScore: number; submittedAt: Date }>);
-
-    // 3. Lấy thông tin tổng điểm và điểm pass của các exercise đã làm
-    const exerciseIds = Object.keys(resultsByExercise);
-    const exercisesInfo = await prisma.exercises.findMany({
-      where: { id: { in: exerciseIds } },
-      include: {
-        skill: {
+        exercise: {
+          // Include thông tin của bài tập liên quan
           select: {
             title: true,
+            skill: {
+              // Include cả thông tin của kỹ năng cha
+              select: {
+                title: true,
+              },
+            },
           },
         },
-        questions: {
-          select: {
-            points: true,
-          },
-        },
-        _count: { select: { questions: true } }, // Tổng số câu hỏi
       },
     });
 
-    // 4. Kết hợp dữ liệu để tạo response cuối cùng
-    const finalResults = exercisesInfo.map((exercise) => {
-      const result = resultsByExercise[exercise.id];
-      const totalPoints = exercise.questions.reduce(
-        (sum, question) => sum + question.points,
-        0
-      );
-      const isPassed =
-        exercise.passScore != null &&
-        (result.userScore / totalPoints) * 100 >= exercise.passScore;
-
-      console.log("LOG", result.userScore);
-      console.log("LOG", totalPoints);
-
+    const finalResults = submissions.map((submission) => {
       return {
-        exerciseId: exercise.id,
-        exerciseTitle: exercise.title,
-        skillTitle: exercise.skill?.title || "undefined",
-        score: result.userScore,
-        totalPoints: totalPoints,
-        isPassed: isPassed,
-        submittedAt: result.submittedAt,
+        exerciseId: submission.exerciseId,
+        exerciseTitle: submission.exercise.title,
+        skillTitle: submission.exercise.skill?.title || "undefined",
+        score: submission.score,
+        totalPoints: submission.totalPoints,
+        isPassed: submission.isPassed,
+        timeSpentSeconds: submission.timeSpentSeconds,
+        submittedAt: submission.submittedAt,
       };
     });
-
-    finalResults.sort(
-      (a, b) =>
-        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-    );
-
     return NextResponse.json({ results: finalResults });
   } catch (error) {
     console.error("Get user exercise results error:", error);

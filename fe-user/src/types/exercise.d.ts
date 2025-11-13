@@ -35,5 +35,6 @@ interface ExerciseResultHistoryItem {
   skillTitle: string;
   score: number;
   totalPoints: number;
-  submittedAt: Date; // ISO date string
+  timeSpentSeconds?: number | null; // Cho phép null hoặc undefined
+  submittedAt: Date;
 }

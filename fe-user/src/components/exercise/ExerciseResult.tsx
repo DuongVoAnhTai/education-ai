@@ -53,8 +53,6 @@ export default function ExerciseResult({
         return;
       }
 
-      console.log("LOG", resultResponse);
-
       setResult(resultResponse);
       setExercise(exerciseResponse.exercise);
       setLoading(false);
