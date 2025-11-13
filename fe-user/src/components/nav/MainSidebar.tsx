@@ -20,7 +20,6 @@ interface SidebarProps {
 const navItems: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: TrendingUp, path: "/" },
   { id: "skills", label: "Kỹ năng", icon: BookOpen, path: "/skills" },
-  { id: "quiz", label: "Bài kiểm tra", icon: BookCheck, path: "/quiz" },
   { id: "chat", label: "Chat", icon: MessageSquare, path: "/messages" },
   { id: "results", label: "Kết quả", icon: Award, path: "/results" },
   { id: "profile", label: "Hồ sơ", icon: UserIcon, path: "/profile" },

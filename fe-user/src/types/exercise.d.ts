@@ -28,3 +28,12 @@ interface ExerciseResultData {
   wrongCount: number;
   answers: any[]; // Cần định nghĩa kiểu chi tiết hơn cho UserAnswer
 }
+
+interface ExerciseResultHistoryItem {
+  exerciseId: string;
+  exerciseTitle: string;
+  skillTitle: string;
+  score: number;
+  totalPoints: number;
+  submittedAt: Date; // ISO date string
+}
