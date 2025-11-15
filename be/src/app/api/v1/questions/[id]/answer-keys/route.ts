@@ -10,7 +10,7 @@ export async function POST(
   try {
     const { id } = await params;
 
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

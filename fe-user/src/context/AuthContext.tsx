@@ -1,21 +1,16 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import * as userService from "@/services/userServices";
-
-type UserPayload = {
-  userId: string;
-  role: string;
-  exp?: number;
-};
 
 type AuthContextType = {
   userPayload: UserPayload | null;
   userDetail: User | null;
   loading: boolean;
   refreshUserDetail: () => Promise<void>;
-  login: (token: string) => void;
+  login: (token: string, user: any) => void;
   logout: () => void;
 };
 
@@ -25,6 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userPayload, setUserPayload] = useState<UserPayload | null>(null);
   const [userDetail, setUserDetail] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   const fetchUser = async () => {
     try {
@@ -41,34 +37,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await fetchUser();
   };
 
-  const login = (token: string) => {
-    localStorage.setItem("token", token);
-    setUserPayload(jwtDecode(token));
-    fetchUser();
+  const login = (token: string, user: any) => {
+    // localStorage.setItem("token", token);
+    // setUserPayload(jwtDecode(token));
+    // fetchUser();
+
+    const decoded = jwtDecode<UserPayload>(token);
+    setUserPayload(decoded);
+    setUserDetail(user);
+
+    // --- CHUYỂN HƯỚNG BAN ĐẦU SAU KHI ĐĂNG NHẬP ---
+    // Chuyển hướng ngay lập tức để người dùng thấy trang mới
+    if (decoded.role === "ADMIN" || decoded.role === "TEACHER") {
+      router.push("/teacher/dashboard"); // Ví dụ route của teacher
+    } else {
+      router.push("/"); // Route mặc định của student
+    }
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
+    // localStorage.removeItem("token");
     setUserPayload(null);
     setUserDetail(null);
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token && token.split(".").length === 3) {
+    // const token = localStorage.getItem("token");
+    // if (token && token.split(".").length === 3) {
+    //   try {
+    //     const decoded = jwtDecode<UserPayload>(token);
+    //     setUserPayload(decoded);
+    //     fetchUser();
+    //   } catch (err) {
+    //     console.error("Failed to decode token:", err);
+    //     localStorage.removeItem("token");
+    //     setLoading(false);
+    //   }
+    // } else {
+    //   console.warn("No valid token found or token malformed");
+    //   setLoading(false);
+    // }
+
+    const initializeAuth = async () => {
+      setLoading(true);
       try {
-        const decoded = jwtDecode<UserPayload>(token);
-        setUserPayload(decoded);
         fetchUser();
-      } catch (err) {
-        console.error("Failed to decode token:", err);
-        localStorage.removeItem("token");
+      } catch (e) {
+        setUserDetail(null);
+        setUserPayload(null);
+      } finally {
         setLoading(false);
       }
-    } else {
-      console.warn("No valid token found or token malformed");
-      setLoading(false);
-    }
+    };
+    initializeAuth();
   }, []);
 
   return (

@@ -12,7 +12,7 @@ export async function checkVisibility(req: Request, skillId: string) {
       },
 
       exercises: {
-        orderBy: {ordering: "asc"},
+        orderBy: { ordering: "asc" },
       },
     },
   });
@@ -28,7 +28,7 @@ export async function checkVisibility(req: Request, skillId: string) {
 
   // 2. Nếu PRIVATE → chỉ admin
   if (skill.visibility === "PRIVATE") {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

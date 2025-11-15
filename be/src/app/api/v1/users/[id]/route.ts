@@ -10,7 +10,7 @@ export async function GET(
 
   try {
     // Verify token and check role
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -58,7 +58,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -111,7 +111,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

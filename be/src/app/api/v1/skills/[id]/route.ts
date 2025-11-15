@@ -38,7 +38,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
 
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -83,7 +83,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
 
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

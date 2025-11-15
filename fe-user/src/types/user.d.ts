@@ -13,4 +13,8 @@ interface SearchUsersResponse {
   error?: string;
 }
 
-
+interface UserPayload {
+  userId: string;
+  role: string;
+  exp?: number;
+}

@@ -18,7 +18,7 @@ export async function GET() {
 // POST /tags — tạo tag (chỉ ADMIN/TEACHER)
 export async function POST(req: Request) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -35,6 +35,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ tag }, { status: 201 });
   } catch (error) {
     console.error("Create tag error:", error);
-    return NextResponse.json({ error: "Failed to create tag" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create tag" },
+      { status: 500 }
+    );
   }
 }

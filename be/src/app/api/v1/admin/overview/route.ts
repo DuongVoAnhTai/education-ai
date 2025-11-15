@@ -5,7 +5,7 @@ import { verifyToken } from "@/lib/auth";
 // GET /admin/overview
 export async function GET(req: Request) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
 
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

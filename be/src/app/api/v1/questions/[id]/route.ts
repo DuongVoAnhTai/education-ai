@@ -9,13 +9,12 @@ export async function PUT(
   try {
     const { id } = await params;
 
-    const payload = await verifyToken(req);
+    const payload = await await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { questionType, prompt, points, ordering } =
-      await req.json();
+    const { questionType, prompt, points, ordering } = await req.json();
 
     // Check question có tồn tại không
     const existingQuestion = await prisma.questions.findUnique({
@@ -57,7 +56,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const payload = await verifyToken(req);
+    const payload = await await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

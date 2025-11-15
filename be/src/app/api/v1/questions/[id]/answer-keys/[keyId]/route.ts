@@ -10,7 +10,7 @@ export async function PUT(
   try {
     const { id, keyId } = await params;
 
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -40,7 +40,7 @@ export async function DELETE(
   try {
     const { id, keyId } = await params;
 
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

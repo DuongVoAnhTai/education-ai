@@ -5,7 +5,7 @@ import cloudinary from "@/config/cloudinary";
 export async function POST(req: Request) {
   try {
     // Xác thực user
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       {
         timestamp,
         folder, // Optional: folder lưu trên Cloudinary
-        tags,   // Optional: thẻ tag cho file
+        tags, // Optional: thẻ tag cho file
       },
       process.env.CLOUDINARY_API_SECRET!
     );
@@ -33,6 +33,9 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Generate signature error:", error);
-    return NextResponse.json({ error: "Failed to generate signature" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to generate signature" },
+      { status: 500 }
+    );
   }
 }

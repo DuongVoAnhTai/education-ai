@@ -10,7 +10,7 @@ export async function POST(
 ) {
   try {
     const { exerciseId } = await params;
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

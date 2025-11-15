@@ -3,14 +3,22 @@ import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 
 export async function GET(req: Request) {
-  const payload = verifyToken(req);
+  const payload = await verifyToken(req);
+
   if (!payload) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const user = await prisma.users.findUnique({
     where: { id: payload.userId },
-    select: { id: true, email: true, role: true, fullName: true, bio: true, avatarUrl: true },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      fullName: true,
+      bio: true,
+      avatarUrl: true,
+    },
   });
 
   return NextResponse.json({ user });
@@ -19,7 +27,7 @@ export async function GET(req: Request) {
 export async function PUT(req: Request) {
   try {
     // Verify token first
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
 
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

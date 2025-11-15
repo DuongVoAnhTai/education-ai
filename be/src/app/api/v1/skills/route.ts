@@ -5,7 +5,7 @@ import { Prisma } from "@/generated/prisma/client";
 
 export async function GET(req: Request) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     const { searchParams } = new URL(req.url);
     const take = parseInt(searchParams.get("take") || "20");
     const cursor = searchParams.get("cursor"); // ID của skill
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
 
     if (!payload || payload.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

@@ -9,7 +9,7 @@ export async function DELETE(
   const { id, tagId } = await params;
 
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -11,7 +11,6 @@ export async function GET(
   const { id } = await params;
 
   try {
-
     const visibilityResult = await checkVisibility(req, id);
     if (visibilityResult instanceof NextResponse) {
       return visibilityResult;
@@ -39,7 +38,7 @@ export async function POST(
   const { id } = await params;
 
   try {
-    const payload = verifyToken(req);
+    const payload = await verifyToken(req);
     if (!payload) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

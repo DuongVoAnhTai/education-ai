@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import "@/styles/styles.css";
 import { useAuth } from "@/context/AuthContext";
 import * as authServices from "@/services/authServices";
@@ -18,7 +17,6 @@ function LoginForm() {
     emailOrUsername?: string;
     password?: string;
   }>({});
-  const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -38,12 +36,11 @@ function LoginForm() {
 
       handleClear();
     } else {
-      login(res.token);
+      login(res.token, res.user);
       toast.success("Đăng nhập thành công!", {
         theme: "colored",
         autoClose: 3000,
       });
-      router.push("/");
       handleClear();
     }
   };
