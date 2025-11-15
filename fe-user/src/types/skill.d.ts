@@ -1,7 +1,4 @@
-interface Tag {
-  id: string;
-  name: string;
-}
+
 
 // Kiểu dữ liệu cho Learning Resource
 interface LearningResource {

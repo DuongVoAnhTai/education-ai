@@ -38,3 +38,9 @@ interface ExerciseResultHistoryItem {
   timeSpentSeconds?: number | null; // Cho phép null hoặc undefined
   submittedAt: Date;
 }
+
+interface ExerciseServiceResponse {
+  exercise?: Exercise;
+  message?: string; // For delete operations
+  error?: string;
+}

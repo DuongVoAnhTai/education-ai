@@ -49,7 +49,7 @@ const MessageSidebar = ({
         setNextCursor(result.nextCursor);
         // Set conversation đầu tiên làm active nếu chưa có
         if (!activeConversationId && result.conversations.length > 0) {
-          if (fetchedUser?.role == "ADMIN" || "TEACHER") {
+          if (fetchedUser?.role == "ADMIN" || fetchedUser?.role == "TEACHER") {
             router.push(`/teacher/messages/${result.conversations[0].id}`);
           } else {
             router.push(`/messages/${result.conversations[0].id}`);
@@ -65,7 +65,7 @@ const MessageSidebar = ({
   const handleConversationClick = (conversationId: string) => {
     // Chỉ điều hướng nếu click vào conversation khác
     if (conversationId !== activeConversationId) {
-      if (fetchedUser?.role == "ADMIN" || "TEACHER") {
+      if (fetchedUser?.role == "ADMIN" || fetchedUser?.role == "TEACHER") {
         router.push(`/teacher/messages/${conversationId}`);
       } else {
         router.push(`/messages/${conversationId}`);

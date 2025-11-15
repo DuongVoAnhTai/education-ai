@@ -25,12 +25,20 @@ const MainTopbar = ({ sidebarOpen, setSidebarOpen }: TopbarProps) => {
 
   const handleProfile = () => {
     setUserMenuOpen(false);
-    router.replace("/profile");
+    if (fetchedUser?.role == "TEACHER" || fetchedUser?.role == "ADMIN") {
+      router.replace("/teacher/profile");
+    } else {
+      router.replace("/profile");
+    }
   };
 
   const handleChangePassword = () => {
     setUserMenuOpen(false);
-    router.replace("/change-password");
+    if (fetchedUser?.role == "TEACHER" || fetchedUser?.role == "ADMIN") {
+      router.replace("/teacher/change-password");
+    } else {
+      router.replace("/change-password");
+    }
   };
 
   const handleLogout = async () => {

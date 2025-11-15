@@ -36,7 +36,7 @@ function LoginForm() {
 
       handleClear();
     } else {
-      login(res.token, res.user);
+      login(res.token);
       toast.success("Đăng nhập thành công!", {
         theme: "colored",
         autoClose: 3000,

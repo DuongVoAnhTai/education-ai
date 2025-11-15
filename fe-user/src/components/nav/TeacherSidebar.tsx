@@ -50,8 +50,8 @@ const TeacherSidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       <nav className="mt-8 px-4">
         {navItems.map((item) => {
           const active =
-            item.path === "/"
-              ? pathname === "/"
+            item.path === "/teacher"
+              ? pathname === "/teacher"
               : pathname.startsWith(item.path);
 
           return (

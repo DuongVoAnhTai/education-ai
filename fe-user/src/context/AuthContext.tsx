@@ -10,7 +10,7 @@ type AuthContextType = {
   userDetail: User | null;
   loading: boolean;
   refreshUserDetail: () => Promise<void>;
-  login: (token: string, user: any) => void;
+  login: (token: string) => void;
   logout: () => void;
 };
 
@@ -37,10 +37,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await fetchUser();
   };
 
-  const login = (token: string, user: any) => {
+  const login = (token: string) => {
     const decoded = jwtDecode<UserPayload>(token);
     setUserPayload(decoded);
-    setUserDetail(user);
+    fetchUser();
 
     // --- CHUYỂN HƯỚNG BAN ĐẦU SAU KHI ĐĂNG NHẬP ---
     // Chuyển hướng ngay lập tức để người dùng thấy trang mới

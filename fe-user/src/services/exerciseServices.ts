@@ -14,6 +14,54 @@ export const getExercisesBySkillId = async (
   }
 };
 
+export const createExercise = async (
+  skillId: string,
+  data: any
+): Promise<ExerciseServiceResponse> => {
+  try {
+    const res = await httpRequest.post(`skills/${skillId}/exercises`, data);
+    return res;
+  } catch (error: any) {
+    return {
+      error: error.response?.data?.error || "Failed to create exercises",
+    };
+  }
+};
+
+export const updateExercise = async (
+  skillId: string,
+  exerciseId: string,
+  data: any
+): Promise<ExerciseServiceResponse> => {
+  try {
+    const res = await httpRequest.put(
+      `skills/${skillId}/exercises/${exerciseId}`,
+      data
+    );
+    return res;
+  } catch (error: any) {
+    return {
+      error: error.response?.data?.error || "Failed to update exercises",
+    };
+  }
+};
+
+export const deleteExercise = async (
+  skillId: string,
+  exerciseId: string
+): Promise<ExerciseServiceResponse> => {
+  try {
+    const res = await httpRequest.del(
+      `skills/${skillId}/exercises/${exerciseId}`
+    );
+    return res;
+  } catch (error: any) {
+    return {
+      error: error.response?.data?.error || "Failed to delete exercises",
+    };
+  }
+};
+
 export const getExerciseById = async (
   skillId: string,
   exerciseId: string

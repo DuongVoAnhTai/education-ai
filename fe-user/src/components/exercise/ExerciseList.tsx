@@ -2,12 +2,15 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Edit, Loader2, PlusCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "react-toastify";
+import { useAuth } from "@/context/AuthContext";
 import * as Icon from "@/assets/Image/exerciseIcon";
 import * as exerciseIcon from "@/assets/Image/exerciseIcon";
 import * as exerciseService from "@/services/exerciseServices";
 import * as userService from "@/services/userServices";
+import ExerciseFormModal from "./ExerciseFormModal";
 
 export default function ExerciseList() {
   const params = useParams();
@@ -20,6 +23,15 @@ export default function ExerciseList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { userDetail } = useAuth();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const canManage =
+    userDetail?.role === "ADMIN" || userDetail?.role === "TEACHER";
 
   useEffect(() => {
     if (!skillId) return;
@@ -77,6 +89,62 @@ export default function ExerciseList() {
     (sub) => sub.isPassed
   ).length;
 
+  const handleOpenCreateModal = () => {
+    setEditingExercise(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (exercise: Exercise) => {
+    setEditingExercise(exercise);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingExercise(null);
+  };
+
+  const handleSaveExercise = async (data: any) => {
+    setIsSaving(true);
+    let response: ExerciseServiceResponse;
+    if (editingExercise) {
+      response = await exerciseService.updateExercise(
+        skillId,
+        editingExercise.id,
+        data
+      );
+      if (response.exercise) {
+        setExercises((prev) =>
+          prev.map((ex) =>
+            ex.id === editingExercise.id ? { ...ex, ...response.exercise } : ex
+          )
+        );
+        toast.success("Cập nhật thành công!");
+      }
+    } else {
+      response = await exerciseService.createExercise(skillId, data);
+      if (response.exercise) {
+        setExercises((prev) => [...prev, response.exercise!]);
+        toast.success("Tạo mới thành công!");
+      }
+    }
+
+    if (response.error) toast.error(response.error);
+    else handleCloseModal();
+    setIsSaving(false);
+  };
+
+  const handleDeleteExercise = async (exerciseId: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa bài tập này?")) return;
+    const response = await exerciseService.deleteExercise(skillId, exerciseId);
+    if (response.message) {
+      setExercises((prev) => prev.filter((ex) => ex.id !== exerciseId));
+      toast.success("Xóa thành công!");
+    } else {
+      toast.error(response.error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -101,21 +169,32 @@ export default function ExerciseList() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">
-              Bài tập & Kiểm tra
+              {canManage ? "Quản lý Bài tập" : "Bài tập & Kiểm tra"}
             </h2>
             <p className="text-gray-600 mt-5">
-              Chọn bài tập để bắt đầu luyện tập
+              {canManage ? "" : "Chọn bài tập để bắt đầu luyện tập"}
             </p>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <input
-              type="text"
-              placeholder="Tìm kiếm bài tập..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="flex items-center gap-4">
+            {canManage && (
+              <button
+                onClick={handleOpenCreateModal}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 cursor-pointer"
+              >
+                <PlusCircle size={20} /> Tạo bài tập
+              </button>
+            )}
+
+            <div className="flex items-center space-x-3">
+              <input
+                type="text"
+                placeholder="Tìm kiếm bài tập..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
 
@@ -134,19 +213,21 @@ export default function ExerciseList() {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <Icon.Trophy size={24} className="text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-green-700">
-                  {completedCount}
-                </p>
-                <p className="text-xs text-green-600">Đã hoàn thành</p>
+          {!canManage && (
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                  <Icon.Trophy size={24} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-700">
+                    {completedCount}
+                  </p>
+                  <p className="text-xs text-green-600">Đã hoàn thành</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -160,12 +241,39 @@ export default function ExerciseList() {
               ? (userAttempt.score / userAttempt.totalPoints) * 100
               : null;
 
+            const exerciseLinkHref = canManage
+              ? `/teacher/skills/${skillId}/exercises/${exercise.id}/manage`
+              : `/exercises/skills/${skillId}/${exercise.id}`;
+
             return (
-              <Link
-                href={`/skills/${skillId}/exercises/${exercise.id}`}
+              <div
                 key={exercise.id}
+                className="group relative bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1"
               >
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+                {canManage && (
+                  <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleOpenEditModal(exercise);
+                      }}
+                      className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md cursor-pointer"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleDeleteExercise(exercise.id);
+                      }}
+                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
+
+                <Link href={exerciseLinkHref}>
                   <div
                     className={`h-2 bg-gradient-to-r ${
                       difficulty === "easy"
@@ -233,8 +341,8 @@ export default function ExerciseList() {
                       </button>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>
@@ -249,6 +357,15 @@ export default function ExerciseList() {
             </h3>
             <p className="text-gray-600">Thử thay đổi từ khóa tìm kiếm</p>
           </div>
+        )}
+
+        {isModalOpen && (
+          <ExerciseFormModal
+            initialData={editingExercise}
+            onClose={handleCloseModal}
+            onSave={handleSaveExercise}
+            isSaving={isSaving}
+          />
         )}
       </div>
     </div>

@@ -3,9 +3,20 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, AlertCircle, BookOpen } from "lucide-react";
+import {
+  Loader2,
+  AlertCircle,
+  BookOpen,
+  PlusCircle,
+  Edit,
+  Trash2,
+} from "lucide-react";
+import { toast } from "react-toastify";
+import { useAuth } from "@/context/AuthContext";
 import * as resourceIcon from "@/assets/Icon/resourceIcon";
 import * as skillService from "@/services/skillServices";
+import * as resourceService from "@/services/resourceServices";
+import ResourceFormModal from "./ResourceFormModal";
 
 function SkillItem() {
   const params = useParams();
@@ -16,6 +27,16 @@ function SkillItem() {
   const [skill, setSkill] = useState<Skill | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { userDetail } = useAuth();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingResource, setEditingResource] =
+    useState<LearningResource | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const canManage =
+    userDetail?.role === "ADMIN" || userDetail?.role === "TEACHER";
 
   useEffect(() => {
     if (!skillId) {
@@ -39,6 +60,90 @@ function SkillItem() {
     fetchSkillDetail();
   }, [skillId, router]);
 
+  const handleOpenCreateModal = () => {
+    setEditingResource(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (resource: LearningResource) => {
+    setEditingResource(resource);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingResource(null);
+  };
+
+  const handleSaveResource = async (data: any) => {
+    if (!skill) return;
+    setIsSaving(true);
+    let response: ResourceServiceResponse;
+
+    if (editingResource) {
+      // Chế độ sửa
+      response = await resourceService.updateResource(editingResource.id, data);
+      if (response.resource) {
+        setSkill((prev) =>
+          prev
+            ? {
+                ...prev,
+                resources: prev.resources?.map((r) =>
+                  r.id === editingResource.id && response.resource
+                    ? response.resource
+                    : r
+                ) as LearningResource[],
+              }
+            : null
+        );
+        toast.success("Cập nhật tài nguyên thành công!");
+      }
+    } else {
+      // Chế độ tạo mới
+      response = await resourceService.createResource(skill.id, data);
+      if (response.resource) {
+        setSkill((prev) =>
+          prev
+            ? {
+                ...prev,
+                resources: [
+                  ...(prev.resources || []),
+                  response.resource as LearningResource,
+                ],
+              }
+            : null
+        );
+        toast.success("Tạo tài nguyên thành công!");
+      }
+    }
+
+    if (response.error) {
+      toast.error(response.error);
+    } else {
+      handleCloseModal();
+    }
+    setIsSaving(false);
+  };
+
+  const handleDeleteResource = async (resourceId: string) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa tài nguyên này?")) return;
+
+    const response = await resourceService.deleteResource(resourceId);
+    if (response.message) {
+      setSkill((prev) =>
+        prev
+          ? {
+              ...prev,
+              resources: prev.resources?.filter((r) => r.id !== resourceId),
+            }
+          : null
+      );
+      toast.success("Xóa tài nguyên thành công!");
+    } else {
+      toast.error(response.error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -59,6 +164,10 @@ function SkillItem() {
 
   if (!skill) return null;
 
+  const linkHref = canManage
+    ? `/teacher/skills/${skill.id}/exercises` // Đường dẫn đến trang SỬA của Teacher
+    : `/skills/${skill.id}/exercises`;
+
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Header: Title và Tags */}
@@ -75,31 +184,73 @@ function SkillItem() {
           <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
             Lộ trình học tập
           </h2>
-          {skill.resources && skill.resources.length > 0 ? (
-            skill.resources.map((resource) => (
-              <Link
-                href={resource.url || "#"}
-                key={resource.id}
-                target="_blank"
-                rel="noopener noreferrer"
+          {canManage && (
+            <div className="flex items-center justify-end">
+              <button
+                onClick={handleOpenCreateModal}
+                className="flex items-center gap-2 text-sm px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all duration-200 cursor-pointer"
               >
-                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-4 hover:border-blue-500 hover:shadow-md transition-all">
-                  <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <resourceIcon.GetResourceIcon
-                      type={resource.resourceType}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold text-gray-800">
-                      {resource.title}
-                    </p>
-                    <span className="text-xs text-gray-500 uppercase">
-                      {resource.resourceType}
-                    </span>
-                  </div>
+                <PlusCircle size={16} />
+                Thêm
+              </button>
+            </div>
+          )}
+          {skill.resources && skill.resources.length > 0 ? (
+            <div className="space-y-3">
+              {skill.resources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="bg-white p-4 my-4 rounded-lg border border-gray-200 shadow-sm flex items-center gap-4 hover:border-blue-500 hover:shadow-md transition-all"
+                >
+                  <Link
+                    href={resource.url || "#"}
+                    key={resource.id}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center gap-4"
+                  >
+                    <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <resourceIcon.GetResourceIcon
+                        type={resource.resourceType}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800">
+                        {resource.title}
+                      </p>
+                      <span className="text-xs text-gray-500 uppercase">
+                        {resource.resourceType}
+                      </span>
+                    </div>
+                  </Link>
+
+                  {canManage && (
+                    <div className="flex items-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+                          handleOpenEditModal(resource);
+                        }}
+                        className="p-2 text-gray-500 hover:text-blue-600 hover:bg-gray-100 rounded-md cursor-pointer"
+                        title="Sửa"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteResource(resource.id);
+                        }}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md"
+                        title="Xóa"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </Link>
-            ))
+              ))}
+            </div>
           ) : (
             <div className="text-center py-12 bg-white rounded-lg border border-dashed">
               <p className="text-gray-500">
@@ -132,7 +283,7 @@ function SkillItem() {
               </div>
 
               {/* Nút điều hướng đến trang danh sách bài tập của skill này */}
-              <Link href={`/skills/${skill.id}/exercises`}>
+              <Link href={linkHref}>
                 <button className="w-full py-2 px-4 rounded-lg font-medium bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:shadow-lg transition-all duration-200 cursor-pointer">
                   Xem danh sách bài tập
                 </button>
@@ -140,6 +291,15 @@ function SkillItem() {
             </div>
           </div>
         </aside>
+
+        {isModalOpen && (
+          <ResourceFormModal
+            initialData={editingResource}
+            onClose={handleCloseModal}
+            onSave={handleSaveResource}
+            isSaving={isSaving}
+          />
+        )}
       </div>
     </div>
   );
