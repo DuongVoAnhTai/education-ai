@@ -17,14 +17,14 @@ interface SidebarProps {
 }
 
 const navItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: TrendingUp, path: "/" },
-  { id: "skills", label: "Kỹ năng", icon: BookOpen, path: "/skills" },
-  { id: "chat", label: "Chat", icon: MessageSquare, path: "/messages" },
-  { id: "results", label: "Kết quả", icon: Award, path: "/results" },
-  { id: "profile", label: "Hồ sơ", icon: UserIcon, path: "/profile" },
+  { id: "dashboard", label: "Dashboard", icon: TrendingUp, path: "/teacher" },
+  { id: "skills", label: "Kỹ năng", icon: BookOpen, path: "/teacher/skills" },
+  { id: "chat", label: "Chat", icon: MessageSquare, path: "/teacher/messages" },
+  { id: "results", label: "Kết quả", icon: Award, path: "/teacher/results" },
+  { id: "profile", label: "Hồ sơ", icon: UserIcon, path: "/teacher/profile" },
 ];
 
-const MainSidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
+const TeacherSidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const pathname = usePathname();
 
   return (
@@ -76,4 +76,4 @@ const MainSidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   );
 };
 
-export default MainSidebar;
+export default TeacherSidebar;

@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import MainSidebar from "@/components/nav/MainSidebar";
 import MainTopbar from "@/components/nav/MainTopbar";
+import TeacherSidebar from "@/components/nav/TeacherSidebar";
 
-function MainLayout({ children }: { children: React.ReactNode }) {
+function TeacherLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Sidebar */}
-      <MainSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <TeacherSidebar
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
       {/* Sidebar overlay trên mobile */}
       {sidebarOpen && (
@@ -29,4 +32,4 @@ function MainLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default MainLayout;
+export default TeacherLayout;

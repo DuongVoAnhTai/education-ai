@@ -38,10 +38,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const login = (token: string, user: any) => {
-    // localStorage.setItem("token", token);
-    // setUserPayload(jwtDecode(token));
-    // fetchUser();
-
     const decoded = jwtDecode<UserPayload>(token);
     setUserPayload(decoded);
     setUserDetail(user);
@@ -49,35 +45,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // --- CHUYỂN HƯỚNG BAN ĐẦU SAU KHI ĐĂNG NHẬP ---
     // Chuyển hướng ngay lập tức để người dùng thấy trang mới
     if (decoded.role === "ADMIN" || decoded.role === "TEACHER") {
-      router.push("/teacher/dashboard"); // Ví dụ route của teacher
+      router.push("/teacher"); // Ví dụ route của teacher
     } else {
       router.push("/"); // Route mặc định của student
     }
   };
 
   const logout = () => {
-    // localStorage.removeItem("token");
     setUserPayload(null);
     setUserDetail(null);
   };
 
   useEffect(() => {
-    // const token = localStorage.getItem("token");
-    // if (token && token.split(".").length === 3) {
-    //   try {
-    //     const decoded = jwtDecode<UserPayload>(token);
-    //     setUserPayload(decoded);
-    //     fetchUser();
-    //   } catch (err) {
-    //     console.error("Failed to decode token:", err);
-    //     localStorage.removeItem("token");
-    //     setLoading(false);
-    //   }
-    // } else {
-    //   console.warn("No valid token found or token malformed");
-    //   setLoading(false);
-    // }
-
     const initializeAuth = async () => {
       setLoading(true);
       try {
